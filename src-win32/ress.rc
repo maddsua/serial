@@ -1,0 +1,19 @@
+#include "serterg/staticConfig.hpp"
+
+APPICON ICON "res\\appicon.ico"
+
+MAINMENU MENU{
+	
+	POPUP "&File"{
+ 	
+		MENUITEM "&Save log", CM_FILE_SVLOG
+		MENUITEM SEPARATOR
+		MENUITEM "&Exit", CM_FILE_EXIT
+	}
+
+	POPUP "&Help"{
+		
+		MENUITEM "&About", CM_ABOUT
+	}
+}
+

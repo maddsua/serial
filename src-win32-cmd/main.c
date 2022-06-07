@@ -19,7 +19,7 @@ unsigned int isInputSpeed(char* input);
 
 
 unsigned int serialSpeeds[serialSpeedsTotal] = {
-		
+	
 	110,
 	300,
 	600,
