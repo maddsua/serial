@@ -1,0 +1,13 @@
+ https://gitlab.com/maddsua
+ 
+ Commands:
+
+	help		->	This command
+	
+	connect, run	->	Connect to the serial port
+	selcom, port	->	Select serial (COM) port
+	sspeed, baud	->	Select serial speed
+	
+	config, cfg	->	Show connection config
+
+	exit		->	?????????
