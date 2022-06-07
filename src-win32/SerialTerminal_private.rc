@@ -1,0 +1,35 @@
+/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */
+/* DO NOT EDIT! */
+
+#include <windows.h> // include for version info constants
+
+#include "ress.rc"
+
+//
+// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...
+//
+1 VERSIONINFO
+FILEVERSION 2,0,0,979
+PRODUCTVERSION 2,0,0,979
+FILETYPE VFT_APP
+{
+  BLOCK "StringFileInfo"
+  {
+    BLOCK "040904E4"
+    {
+      VALUE "CompanyName", "maddsua"
+      VALUE "FileVersion", "2.0.0.979"
+      VALUE "FileDescription", "Serial Terminal (COM monitor)"
+      VALUE "InternalName", "SerialTerminalGraphical"
+      VALUE "LegalCopyright", "https://gitlab.com/maddsua"
+      VALUE "LegalTrademarks", "2022 maddsua/dev"
+      VALUE "OriginalFilename", "serterg"
+      VALUE "ProductName", "Serial Terminal"
+      VALUE "ProductVersion", "2.0.0.979"
+    }
+  }
+  BLOCK "VarFileInfo"
+  {
+    VALUE "Translation", 0x0409, 1252
+  }
+}
