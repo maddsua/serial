@@ -18,5 +18,5 @@ Well, if you know what COM port is, you should know what this app is for.
 
 Built with [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) 10
 
-[Download package 📦](build-win32/serialterminal-2.0.0.zip)
+[👉 Download app (.exe file)](build-win32/serialterminal-2.0.0.zip)
 
