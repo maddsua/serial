@@ -1,24 +1,42 @@
-## Serial Terminal GUI version
+# Serial
 
-## Some big things are about to be added, so stay tuned
+This repo contains a few inerations of serial terminal app made by my as long as a library for easy COM port communications.
 
-May 1 2022 - v2.0.0
+## Building process
 
-This is a second, graphical version of my serial monitor/terminal utility. It is similar to Arduino IDEs Serial Monitor.
+Is as simple as runnig `make`. It requires:
 
-Features:
+- GCC 9+ (maybe lower, idk, get it from [MSYS2](https://packages.msys2.org/base/mingw-w64-gcc))
+- Windows specific stuff (should come along with GCC build)
+- windres (check if you have it included in binutils, should come along with GCC too)
+- make tool. It is included in binutils, but is named like `make-some-build-info-nobody-cares-about.exe`. Just rename it to `make.exe`
 
-- Send and receive ASCI strings
-- Up to 64 plug and play serial ports
-- AT command panel
-- Save log to file
+# CLI Terminal
 
-Well, if you know what COM port is, you should know what this app is for.
+Look like this:
 
+---
 
-![Image](info/interface-v2.png)
+<img src="design/screenshot-cli.png">
 
-Built with [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) 10
+---
 
-[👉 Download app (.exe file)](build-win32/serialterminal-2.0.0.zip)
+Pretty simple tool, has a help command, so as long as you are familiar with diskpart - you won't get lost.
 
+# GUI Terminal
+
+Now we're getting serious. It's the second generation of this tool. Stupidly simple to use:
+
+<img src="design/screenshot-gui.png">
+
+### Note
+
+- At the moment, special characters are not supported. Will come in v4
+
+- You might ask what exaclty will be placed when the "Use newline" is active? It'll be just a single LF (0x0A) character
+
+# Lib serial-api
+
+Allows you to do really cool stuff with com port. Will be a part of v4 Serial Terminal. That thing is gonna be thicc.
+
+Compile with a `make` command while in `lib` directory, then just link to your project. Super straightforward as always.
