@@ -4,3 +4,4 @@
 *.exe
 *.layout
 *.res
+cli/data/headerString.txt
