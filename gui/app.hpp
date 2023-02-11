@@ -58,7 +58,6 @@
 	#define comPortPathPrefix		"\\\\.\\"
 	#define portNameLen				8
 	#define portPathLen				16
-	#define serialSpeeds			15
 	#define defSerialSpeed			6
 
 
@@ -67,12 +66,12 @@
 	void log(HWND hEdit, LPCSTR newText);
 	void quickcmd(HWND term, const char* cmd, bool usenl,  const char* port, std::vector <std::string>* datalog, char* comm);
 	void metalog(const char* input, const char* port, char* result, bool isInput);
-	void dropdown(HWND combo, char** items, unsigned int length, unsigned int focus, bool erase);
-	void dropdown(HWND combo, const int* items, unsigned int length, unsigned int focus, bool erase);
+	//void dropdown(HWND combo, char** items, unsigned int length, unsigned int focus, bool erase);
+	void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);
 	
 	bool SaveLogFile(std::vector <std::string>* commlog, char* filepath);
 	
-	unsigned int scanPorts(char** splsarray);
+	unsigned int scanPorts(std::vector <std::string>* items);
 	
 	char*** create3d(unsigned int dim_1, unsigned int dim_2, unsigned int dim_3);
 	char** create2d(unsigned int dim_1, unsigned int dim_2);

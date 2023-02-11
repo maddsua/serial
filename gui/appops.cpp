@@ -104,32 +104,27 @@ void dropdown(HWND combo, char** items, unsigned int length, unsigned int focus,
 	
 }
 
-void dropdown(HWND combo, const int* items, unsigned int length, unsigned int focus, bool erase){
+void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase){
 	
-	if(erase){
-		int contlen = SendMessage(combo, CB_GETCOUNT, 0, 0);
-		
-		for (int i = 0; i < contlen; i++){
+	if (erase) {
+		size_t contlen = SendMessage(combo, CB_GETCOUNT, 0, 0);
+		for (size_t i = 0; i < contlen; i++)
 			SendMessage(combo, CB_DELETESTRING, 0, 0);
-		}
 	}
 	
-	for (int i = 0; i < length; i++){
-		
-		char tempnumstr[64];
-			sprintf(tempnumstr, "%i baud", items[i]);
-		
-		SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)tempnumstr);
+	for (int i = 0; i < items->size(); i++) {
+		std::string temp = items->at(i);
+		SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)temp.c_str());
 	}
+
 	SendMessage(combo, CB_SETCURSEL , focus, 0);
-	
 }
 
 
 /*			winapi			*/
-unsigned int scanPorts(char** splsarray){
+unsigned int scanPorts(std::vector <std::string>* items) {
 	
-	unsigned int splsarrayUtil = 0;
+	items->clear();
 		
 	for (int scancom = 1; scancom < scanSerialPorts; scancom++){
 		
@@ -146,8 +141,7 @@ unsigned int scanPorts(char** splsarray){
 		if(Port != INVALID_HANDLE_VALUE){
 			
 		//	found = true;
-			strcpy(splsarray[splsarrayUtil], comname);
-			splsarrayUtil++;
+			items->push_back(comname);
 		}
 	/*	else{
 			DWORD lerr = GetLastError();
@@ -165,7 +159,7 @@ unsigned int scanPorts(char** splsarray){
 		CloseHandle(Port);
 	}
 	
-	return splsarrayUtil;
+	return items->size();
 }
 
 
