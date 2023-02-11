@@ -111,11 +111,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	static std::thread worker;
 
 	static uiElements ui;
+	static uiData data;
 	
 	static char bufferIn[commsgbuff];
 	static char bufferOut[commsgbuff];
-	static int commstat;
-	static bool placeNewLine;
 
 	static std::vector <std::string> serialPorts;
 
@@ -124,20 +123,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		"14400", "19200", "38400", "56000", "57600",
 		"115200", "128000", "256000"
 	};
-	
-	//static char** serialPorts;
-	//static unsigned int portsReady;
-	
-	static unsigned int selspeed;
-	static unsigned int selport;
-	
-	static bool isExtended;
-	
-	static std::vector <std::string> commLog;
-	static std::vector <std::string> cmdHistory;
-	
-	static bool viewHistory;
-	static int historyItem;
 
 	static char porttemp[125];
 		
@@ -150,26 +135,26 @@ switch(Message) {
 		//serialPorts = create2d(scanSerialPorts, portNameLen);
 		scanPorts(&serialPorts);
 			
-		placeNewLine = true;
-		commstat = 0;
+		data.useNewline = true;
+		data.commstat = 0;
 		
 		//	default settings
-		selspeed = defSerialSpeed;
+		data.sel_speed = defSerialSpeed;
 		
-		if (serialPorts.size()) selport = serialPorts.size() - 1;
-			else selport = 0;
+		if (serialPorts.size()) data.sel_port = serialPorts.size() - 1;
+			else data.sel_port = 0;
 		
-		isExtended = false;
-		viewHistory = false;
+		data.isExtended = false;
+		data.viewHistory = false;
 		
 		
 		//	draw GUI
 		//	drop lists
 		ui.comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, hwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-			dropdown(ui.comboport, &serialPorts, selport, true);
+			dropdown(ui.comboport, &serialPorts, data.sel_port, true);
 			
 		ui.combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, hwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
-			dropdown(ui.combospeed, &serialSpeedList, selspeed, false);
+			dropdown(ui.combospeed, &serialSpeedList, data.sel_speed, false);
 		
 		//	log
 		ui.terminalwindow = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, hwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
@@ -200,8 +185,8 @@ switch(Message) {
 		
 		//	start app
 		memset(porttemp, 0, sizeof(porttemp));
-		memcpy(porttemp, serialPorts[selport].c_str(), serialPorts[selport].size());
-		worker = std::thread(serialIO, porttemp, serialSpeeds[selspeed], bufferIn, bufferOut, &commstat, placeNewLine);
+		memcpy(porttemp, serialPorts[data.sel_port].c_str(), serialPorts[data.sel_port].size());
+		worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 		SetTimer(hwnd, CYCLE_PRINT, TTOUT, NULL);
 
 
@@ -223,8 +208,8 @@ switch(Message) {
 					case GUI_COMBO_PORT:{
 						
 						//	disconnect
-						if (!commstat) {
-							commstat = 1;
+						if (!data.commstat) {
+							data.commstat = 1;
 							worker.join();
 						}
 						
@@ -233,21 +218,21 @@ switch(Message) {
 						SetWindowText(ui.terminalwindow, 0);
 						
 						//	clear log
-						commLog.clear();
+						data.commLog.clear();
 						
 						//	select
-						selport = (int) SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
+						data.sel_port = (int) SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
 						
 						//	reconnect
-						commstat = 0;
+						data.commstat = 0;
 						memset(porttemp, 0, sizeof(porttemp));
-						memcpy(porttemp, serialPorts[selport].c_str(), serialPorts[selport].size());
-						worker = std::thread(serialIO, porttemp, serialSpeeds[selspeed], bufferIn, bufferOut, &commstat, placeNewLine);
+						memcpy(porttemp, serialPorts[data.sel_port].c_str(), serialPorts[data.sel_port].size());
+						worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 							
 						break;
 					}
 					case GUI_COMBO_SPEED: {
-						selspeed = (int) SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
+						data.sel_speed = (int) SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
 						break;
 					}
 				}
@@ -262,31 +247,31 @@ switch(Message) {
 					case GUI_BTN_CLR:{
 						
 						//	disconnect
-						if (!commstat) {
-							commstat = 1;
+						if (!data.commstat) {
+							data.commstat = 1;
 							worker.join();
 						}
 						
 						//	update port list
 						scanPorts(&serialPorts);
-						dropdown(ui.comboport, &serialPorts, selport, true);
+						dropdown(ui.comboport, &serialPorts, data.sel_port, true);
 						
 						//	flush buffers
 						memset(bufferIn, 0, sizeof(bufferIn));
 						memset(bufferOut, 0, sizeof(bufferOut));
 						
 						//	clear log
-						commLog.clear();
+						data.commLog.clear();
 						
 						//	erase texts
 						SetWindowText(ui.commprompt, 0);
 						SetWindowText(ui.terminalwindow, 0);
 						
 						//	reconnect
-						commstat = 0;
+						data.commstat = 0;
 						memset(porttemp, 0, sizeof(porttemp));
-						memcpy(porttemp, serialPorts[selport].c_str(), serialPorts[selport].size());
-						worker = std::thread(serialIO, porttemp, serialSpeeds[selspeed], bufferIn, bufferOut, &commstat, placeNewLine);
+						memcpy(porttemp, serialPorts[data.sel_port].c_str(), serialPorts[data.sel_port].size());
+						worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 
 						break;
 					}
@@ -294,7 +279,7 @@ switch(Message) {
 					//	send button
 					case GUI_BTN_SEND:{
 						
-						viewHistory = false;
+						data.viewHistory = false;
 						
 						//	get command trom input control
 						char userCommand[commsgbuff];
@@ -304,40 +289,40 @@ switch(Message) {
 						if (strlen(userCommand) > 0) {
 							
 							//	add command to history
-							if (cmdHistory.size() > 0) {
+							if (data.cmdHistory.size() > 0) {
 								
 								bool foundCmd = false;
 								int foundCmdIndex;
 								
-								for (int i = 0; i < cmdHistory.size(); i++) {
+								for (int i = 0; i < data.cmdHistory.size(); i++) {
 									
-									if (userCommand == cmdHistory[i]) {
+									if (userCommand == data.cmdHistory[i]) {
 										
 										foundCmd = true;
 										foundCmdIndex = i;
 									}
 								}
 								
-								if (foundCmd) std::swap(cmdHistory[foundCmdIndex], cmdHistory[cmdHistory.size() - 1]);
-									else cmdHistory.push_back(userCommand);
+								if (foundCmd) std::swap(data.cmdHistory[foundCmdIndex], data.cmdHistory[data.cmdHistory.size() - 1]);
+									else data.cmdHistory.push_back(userCommand);
 								
 							} else {
-								cmdHistory.push_back(userCommand);
+								data.cmdHistory.push_back(userCommand);
 							}
 							
 							//	display command
-							if (placeNewLine) {
+							if (data.useNewline) {
 								
 								//	add new line sign
 								strcat(userCommand, "\n");
 								
 								//	add port info
 								char logtmp[comlogbuff];
-									metalog(userCommand, serialPorts[selport].c_str(), logtmp, true);
+									metalog(userCommand, serialPorts[data.sel_port].c_str(), logtmp, true);
 								
 								//	display and write log
 								log(ui.terminalwindow, logtmp);
-								commLog.push_back(logtmp);
+								data.commLog.push_back(logtmp);
 							}
 							
 							//	copy command to output buffer
@@ -367,17 +352,17 @@ switch(Message) {
 					}
 					case GUI_AT_AT:{
 						
-						quickcmd(ui.terminalwindow, "AT\n", placeNewLine, serialPorts[selport].c_str(), &commLog, bufferOut);
+						quickcmd(ui.terminalwindow, "AT\n", data.useNewline, serialPorts[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}	
 					case GUI_AT_OK:{
 
-						quickcmd(ui.terminalwindow, "OK\n", placeNewLine, serialPorts[selport].c_str(), &commLog, bufferOut);
+						quickcmd(ui.terminalwindow, "OK\n", data.useNewline, serialPorts[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}
 					case GUI_AT_ID:{
 
-						quickcmd(ui.terminalwindow, "AT+ID\n", placeNewLine, serialPorts[selport].c_str(), &commLog, bufferOut);
+						quickcmd(ui.terminalwindow, "AT+ID\n", data.useNewline, serialPorts[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}
 					
@@ -385,7 +370,7 @@ switch(Message) {
 					case GUI_CHK_NLN:{
 						
 						//	just get the flag
-						placeNewLine = (bool) SendMessageW(ui.newlinecheck, BM_GETCHECK, 0, 0);
+						data.useNewline = (bool) SendMessageW(ui.newlinecheck, BM_GETCHECK, 0, 0);
 						break;
 					}
 					
@@ -393,12 +378,12 @@ switch(Message) {
 						
 						unsigned short int showflag;
 						
-						if (isExtended) {
-							isExtended = false;
+						if (data.isExtended) {
+							data.isExtended = false;
 							showflag = 0;
 						}
 						else{
-							isExtended = true;
+							data.isExtended = true;
 							showflag = 1;
 						}
 						
@@ -437,7 +422,7 @@ switch(Message) {
 						
 						if (GetSaveFileNameA(&ofn)) {
 							
-							if (!SaveLogFile(&commLog, ofn.lpstrFile)) {
+							if (!SaveLogFile(&data.commLog, ofn.lpstrFile)) {
 								MessageBoxA(hwnd, "Save file failed.", "Error", MB_OK | MB_ICONEXCLAMATION);
 							}
 						}
@@ -447,7 +432,7 @@ switch(Message) {
 					
 					case CM_FILE_EXIT:{
 						
-						commstat = 1;
+						data.commstat = 1;
 						PostMessage(hwnd, WM_CLOSE, 0, 0);
 						break;
 					}
@@ -455,34 +440,34 @@ switch(Message) {
 					//	custom events
 					case ICEV_CMDLIST: {
 						
-						if (cmdHistory.size() > 0) {
+						if (data.cmdHistory.size() > 0) {
 						
 							//	open history of scroll trough it
-							if (!viewHistory) {
+							if (!data.viewHistory) {
 								
-								historyItem = cmdHistory.size() - 1;
-								viewHistory = true;
+								data.historyItem = data.cmdHistory.size() - 1;
+								data.viewHistory = true;
 							}
 							else{
 							
 								if (lParam == 0) {
-									historyItem--;
+									data.historyItem--;
 								}
 								else{
-									historyItem++;
+									data.historyItem++;
 								}
 							}
 							
 								//	set index in range
-								if (historyItem < 0) {
-									historyItem = 0;
+								if (data.historyItem < 0) {
+									data.historyItem = 0;
 								}
-								else if (historyItem >= cmdHistory.size()) {
-									historyItem = cmdHistory.size() - 1;
+								else if (data.historyItem >= data.cmdHistory.size()) {
+									data.historyItem = data.cmdHistory.size() - 1;
 								}
 							
 							//	paste cmd
-							SetWindowTextA(ui.commprompt, cmdHistory[historyItem].c_str());
+							SetWindowTextA(ui.commprompt, data.cmdHistory[data.historyItem].c_str());
 								
 							//	set text curcor position
 							int TextLen = SendMessage(ui.commprompt, WM_GETTEXTLENGTH, 0, 0);
@@ -508,20 +493,20 @@ switch(Message) {
 	
 	case WM_TIMER: {
 		
-		if (!commstat && strlen(bufferIn) > 0) {
+		if (!data.commstat && strlen(bufferIn) > 0) {
 			
 			char logtmp[comlogbuff];
 			
-			if (placeNewLine) metalog(bufferIn, serialPorts[selport].c_str(), logtmp, false);
+			if (data.useNewline) metalog(bufferIn, serialPorts[data.sel_port].c_str(), logtmp, false);
 			else strcpy(logtmp, bufferIn);
 
 			log(ui.terminalwindow, logtmp);
-			commLog.push_back(logtmp);
+			data.commLog.push_back(logtmp);
 			
 			memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
 		}
 
-		switch (commstat) {
+		switch (data.commstat) {
 			case 2:
 				log(ui.terminalwindow, "___ Port is not connected ___\n");
 			break;
@@ -542,7 +527,7 @@ switch(Message) {
 			break;
 		}
 				
-		commstat = 0;
+		data.commstat = 0;
 		
 		break;
 	}
@@ -550,7 +535,7 @@ switch(Message) {
 	case WM_DESTROY: {
 		
 		//	close io thread
-		commstat = 1;
+		data.commstat = 1;
 		worker.join();
 		
 		//	destroy ports array
