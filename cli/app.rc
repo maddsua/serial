@@ -1,7 +1,7 @@
 
 #include <windows.h>
 
-A ICON "../design/icon_cli.ico"
+APPICON ICON "../design/icon_cli.ico"
 
 1 VERSIONINFO
 FILEVERSION 1,0,4,240
