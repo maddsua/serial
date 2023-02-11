@@ -21,7 +21,7 @@ Look like this:
 
 ---
 
-Pretty simple tool, has a help command so as long as you are used to windows tools like diskpart - you won't get lost.
+Pretty simple tool, has a help command, so as long as you are familiar with diskpart - you won't get lost.
 
 # GUI Terminal
 
@@ -33,7 +33,7 @@ Now we're getting serious. It's the second generation of this tool. Stupidly sim
 
 - At the moment, special characters are not supported. Will come in v4
 
-- You might ask what newline it places when the "Use newline" is active? It'll be just '\n' character (LF, 0x0A)
+- You might ask what exaclty will be placed when the "Use newline" is active? It'll be just a single LF (0x0A) character
 
 # Lib serial-api
 
