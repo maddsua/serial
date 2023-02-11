@@ -7,6 +7,10 @@ const std::array<uint32_t, 17> comSpeeds = {
 	56000, 57600, 115200, 128000
 };
 
+std::vector <uint32_t> maddsua::serial::getSpeeds() {
+	return std::vector <uint32_t> (comSpeeds.begin(), comSpeeds.end());
+};
+
 bool maddsua::serial::setSpeed(uint32_t baudrate) {
 
 	for (auto speed : comSpeeds) {
