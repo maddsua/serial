@@ -24,6 +24,9 @@
 		std::vector <std::string> speeds;
 		std::vector <std::string> ports;
 
+		std::vector <std::string> commLog;
+		std::vector <std::string> cmdHistory;
+
 		std::string buffIn;
 		std::string buffOut;
 
