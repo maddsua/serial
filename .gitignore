@@ -1,7 +1,5 @@
-
 *.o
-*.win
 *.exe
-*.layout
 *.res
 cli/data/headerString.txt
+build/
