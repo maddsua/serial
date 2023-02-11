@@ -32,8 +32,7 @@
 #define size_serialPortPath		16
 #define serialSpeedsTotal		15
 
-#define msg_title				""
-#define msg_hlp					" https://gitlab.com/maddsua \n\n Commands:\n\n	help		->	This command\n	\n	connect, run	->	Connect to the serial port\n	selcom, port	->	Select serial (COM) port\n	sspeed, baud	->	Select serial speed\n	\n	config, cfg	->	Show connection config\n\n	exit		->	?????????"
+#define msg_hlp					" https://github.com/maddsua\r\n \r\n Commands:\r\n\r\n\thelp\t\t->\tThis command\r\n\t\r\n\tconnect, run\t->\tConnect to the serial port\r\n\tselcom, port\t->\tSelect serial (COM) port\r\n\tsspeed, baud\t->\tSelect serial speed\r\n\t\r\n\tconfig, cfg\t->\tShow connection config\r\n\r\n\texit\t\t->\t?????????"
 
 
 int comTalk(unsigned int serialIndex, unsigned int serialSpeed);
