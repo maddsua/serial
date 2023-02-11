@@ -7,8 +7,7 @@
 #include <array>
 #include <vector>
 #include <thread>
-
-#include <iostream>
+#include <mutex>
 
 
 #define PORTS_COMSMAX		(256)
