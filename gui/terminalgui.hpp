@@ -3,6 +3,10 @@
 #define _SERIALTERMINALAPPGUI
 
 	#include <windows.h>
+	#include <CommCtrl.h>
+
+	#include <vector>
+	#include <string>
 
 	struct uiElements {
 		HWND terminalwindow;
@@ -40,6 +44,9 @@
 		bool useNewline;
 		bool isExtended;
 	};
+
+	void uiInit(HWND* appwnd, uiElements* ui, uiData* data);
+	void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);
 
 
 #endif

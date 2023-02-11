@@ -1,7 +1,7 @@
 
 APP        = SerialTerminal.exe
-OBJECTS    = app.res appops.o serialcomms.o
-FLAGS      = -std=c++20 -mwindows -g
+OBJECTS    = app.res appops.o serialcomms.o ui.o
+FLAGS      = -std=c++20 -mwindows
 LIBS       = -lgdi32 -lcomdlg32
 
 .PHONY: all all-before all-after clean-custom run-custom lib demo
@@ -21,6 +21,9 @@ run: run-custom
 
 $(APP): main.o $(OBJECTS)
 	g++ main.o $(OBJECTS) $(LIBS) $(FLAGS) -o $(APP)
+
+ui.o: ui.cpp
+	g++ -c ui.cpp -o ui.o $(FLAGS)
 
 appops.o: appops.cpp
 	g++ -c appops.cpp -o appops.o $(FLAGS)

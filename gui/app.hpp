@@ -32,23 +32,6 @@
 	#define CYCLE_PRINT				666
 	#define winapi_textedit_OVF		28000
 
-	/*		GUI		*/
-	#define GUI_LOGWIN				11
-	#define GUI_COMPROM				12
-	#define GUI_COMBO_PORT			13
-	#define GUI_COMBO_SPEED			14
-	#define GUI_BTN_SEND			15
-	#define GUI_BTN_CLR				16
-	#define GUI_BTN_UPD				17
-	#define GUI_CHK_NLN				18
-	#define GUI_CHK_QKAT			19
-
-	#define GUI_AT_PREF				20
-	#define GUI_AT_AT				21
-	#define GUI_AT_OK				22
-	#define GUI_AT_ID				23
-
-
 	/*		serial IO		*/
 	#define comSyncDelayMs			1
 	#define comMsgReadSize			32
@@ -72,11 +55,6 @@
 	bool SaveLogFile(std::vector <std::string>* commlog, char* filepath);
 	
 	unsigned int scanPorts(std::vector <std::string>* items);
-	
-	char*** create3d(unsigned int dim_1, unsigned int dim_2, unsigned int dim_3);
-	char** create2d(unsigned int dim_1, unsigned int dim_2);
-	void clear3d(char*** array, unsigned int dim_1, unsigned int dim_2);
-	void clear2d(char** array, unsigned int dim_1);
 
 
 #endif
