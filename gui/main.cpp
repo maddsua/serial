@@ -40,7 +40,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wc.lpszMenuName  = "MAINMENU";
-	wc.lpszClassName = "WindowClass";
+	wc.lpszClassName = "*windowClass";
 	wc.hIcon		 = LoadIconA(hInstance, "APPICON");
 	wc.hIconSm		 = LoadIconA(hInstance, "APPICON");
 
@@ -53,7 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int winPosx = (GetSystemMetrics(SM_CXSCREEN) / 2) - (windowSizeX);
     int winPosy = (GetSystemMetrics(SM_CYSCREEN) / 2) - (windowSizeY / 1.2);
 
-	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "WindowClass", APP_NAME, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "*windowClass", APP_NAME, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
 		winPosx, winPosy, windowSizeX, windowSizeY,
 		NULL, NULL, hInstance, NULL);
 
@@ -105,6 +105,42 @@ LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
    return 0;
 }
 
+void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
+	//	drop lists
+	ui->comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
+	dropdown(ui->comboport, &data->ports, data->sel_port, true);
+		
+	ui->combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
+	dropdown(ui->combospeed, &data->speeds, data->sel_speed, false);
+	
+	//	log
+	ui->terminalwindow = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
+		
+	//	input	
+	ui->commprompt = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
+	
+	//	buttons
+	ui->senditbtn = CreateWindowA("BUTTON", "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
+	
+	ui->clearbtn = CreateWindowA("BUTTON", "Clear&&Update", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
+	
+	//	checkboxes
+	ui->newlinecheck = CreateWindowA("BUTTON", "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, *appwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
+	SendMessageW(ui->newlinecheck, BM_SETCHECK, BST_CHECKED, 0);
+	
+	ui->extended = CreateWindowA("BUTTON", "AT controls", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 100, 10, 75, 16, *appwnd, (HMENU)GUI_CHK_QKAT, NULL, NULL);
+		
+	//	AT-macro buttons
+	ui->atbtn_at = CreateWindowA("BUTTON", "AT", WS_CHILD, 10, 380, 80, 25, *appwnd, (HMENU)GUI_AT_AT, NULL, NULL);
+	ui->atbtn_id = CreateWindowA("BUTTON", "AT+ID", WS_CHILD, 95, 380, 80, 25, *appwnd, (HMENU)GUI_AT_ID, NULL, NULL);
+	ui->atbtn_ok = CreateWindowA("BUTTON", "OK", WS_CHILD, 180, 380, 80, 25, *appwnd, (HMENU)GUI_AT_OK, NULL, NULL);
+	ui->atbtn_prefix = CreateWindowA("BUTTON", "AT+", WS_CHILD, 265, 380, 80, 25, *appwnd, (HMENU)GUI_AT_PREF, NULL, NULL);
+	
+	//	set font
+	for (int i = GUI_LOGWIN; i <= GUI_AT_ID; i++)
+		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(TRUE,0));
+}
+
 //	-------		app itself
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 	
@@ -113,16 +149,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	static uiElements ui;
 	static uiData data;
 	
-	static char bufferIn[commsgbuff];
-	static char bufferOut[commsgbuff];
-
-	static std::vector <std::string> serialPorts;
-
-	static std::vector <std::string> serialSpeedList = {
+	data.speeds = {
 		"110", "300", "600", "1200", "2400", "4800", "9600",
 		"14400", "19200", "38400", "56000", "57600",
 		"115200", "128000", "256000"
 	};
+
+	static char bufferIn[commsgbuff];
+	static char bufferOut[commsgbuff];
 
 	static char porttemp[125];
 		
@@ -133,7 +167,7 @@ switch(Message) {
 					
 		//	init vars
 		//serialPorts = create2d(scanSerialPorts, portNameLen);
-		scanPorts(&serialPorts);
+		scanPorts(&data.ports);
 			
 		data.useNewline = true;
 		data.commstat = 0;
@@ -141,56 +175,20 @@ switch(Message) {
 		//	default settings
 		data.sel_speed = defSerialSpeed;
 		
-		if (serialPorts.size()) data.sel_port = serialPorts.size() - 1;
+		if (data.ports.size()) data.sel_port = data.ports.size() - 1;
 			else data.sel_port = 0;
 		
 		data.isExtended = false;
 		data.viewHistory = false;
-		
-		
-		//	draw GUI
-		//	drop lists
-		ui.comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, hwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-			dropdown(ui.comboport, &serialPorts, data.sel_port, true);
-			
-		ui.combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, hwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
-			dropdown(ui.combospeed, &serialSpeedList, data.sel_speed, false);
-		
-		//	log
-		ui.terminalwindow = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, hwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
-			
-		//	input	
-		ui.commprompt = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, hwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
-		
-		//	buttons
-		ui.senditbtn = CreateWindowA("BUTTON", "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, hwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
-		
-		ui.clearbtn = CreateWindowA("BUTTON", "Clear&&Update", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, hwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
-		
-		//	checkboxes
-		ui.newlinecheck = CreateWindowA("BUTTON", "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, hwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
-		SendMessageW(ui.newlinecheck, BM_SETCHECK, BST_CHECKED, 0);
-		
-		ui.extended = CreateWindowA("BUTTON", "AT controls", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 100, 10, 75, 16, hwnd, (HMENU)GUI_CHK_QKAT, NULL, NULL);
-			
-		//	AT-macro buttons
-		ui.atbtn_at = CreateWindowA("BUTTON", "AT", WS_CHILD, 10, 380, 80, 25, hwnd, (HMENU)GUI_AT_AT, NULL, NULL);
-		ui.atbtn_id = CreateWindowA("BUTTON", "AT+ID", WS_CHILD, 95, 380, 80, 25, hwnd, (HMENU)GUI_AT_ID, NULL, NULL);
-		ui.atbtn_ok = CreateWindowA("BUTTON", "OK", WS_CHILD, 180, 380, 80, 25, hwnd, (HMENU)GUI_AT_OK, NULL, NULL);
-		ui.atbtn_prefix = CreateWindowA("BUTTON", "AT+", WS_CHILD, 265, 380, 80, 25, hwnd, (HMENU)GUI_AT_PREF, NULL, NULL);
-		
-		//	set font
-		for (int i = GUI_LOGWIN; i <= GUI_AT_ID; i++)
-			SendDlgItemMessage(hwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(TRUE,0));
+
+		uiInit(&hwnd, &ui, &data);
 		
 		//	start app
 		memset(porttemp, 0, sizeof(porttemp));
-		memcpy(porttemp, serialPorts[data.sel_port].c_str(), serialPorts[data.sel_port].size());
+		memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
 		worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 		SetTimer(hwnd, CYCLE_PRINT, TTOUT, NULL);
 
-
-		
 		//	ewdirect keypress input for input form
 		mainevents = (WNDPROC)SetWindowLongPtr(ui.commprompt, GWLP_WNDPROC, (LONG_PTR)cmdEVs);
 
@@ -226,7 +224,7 @@ switch(Message) {
 						//	reconnect
 						data.commstat = 0;
 						memset(porttemp, 0, sizeof(porttemp));
-						memcpy(porttemp, serialPorts[data.sel_port].c_str(), serialPorts[data.sel_port].size());
+						memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
 						worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 							
 						break;
@@ -253,8 +251,8 @@ switch(Message) {
 						}
 						
 						//	update port list
-						scanPorts(&serialPorts);
-						dropdown(ui.comboport, &serialPorts, data.sel_port, true);
+						scanPorts(&data.ports);
+						dropdown(ui.comboport, &data.ports, data.sel_port, true);
 						
 						//	flush buffers
 						memset(bufferIn, 0, sizeof(bufferIn));
@@ -270,7 +268,7 @@ switch(Message) {
 						//	reconnect
 						data.commstat = 0;
 						memset(porttemp, 0, sizeof(porttemp));
-						memcpy(porttemp, serialPorts[data.sel_port].c_str(), serialPorts[data.sel_port].size());
+						memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
 						worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 
 						break;
@@ -318,7 +316,7 @@ switch(Message) {
 								
 								//	add port info
 								char logtmp[comlogbuff];
-									metalog(userCommand, serialPorts[data.sel_port].c_str(), logtmp, true);
+									metalog(userCommand, data.ports[data.sel_port].c_str(), logtmp, true);
 								
 								//	display and write log
 								log(ui.terminalwindow, logtmp);
@@ -352,17 +350,17 @@ switch(Message) {
 					}
 					case GUI_AT_AT:{
 						
-						quickcmd(ui.terminalwindow, "AT\n", data.useNewline, serialPorts[data.sel_port].c_str(), &data.commLog, bufferOut);
+						quickcmd(ui.terminalwindow, "AT\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}	
 					case GUI_AT_OK:{
 
-						quickcmd(ui.terminalwindow, "OK\n", data.useNewline, serialPorts[data.sel_port].c_str(), &data.commLog, bufferOut);
+						quickcmd(ui.terminalwindow, "OK\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}
 					case GUI_AT_ID:{
 
-						quickcmd(ui.terminalwindow, "AT+ID\n", data.useNewline, serialPorts[data.sel_port].c_str(), &data.commLog, bufferOut);
+						quickcmd(ui.terminalwindow, "AT+ID\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}
 					
@@ -497,7 +495,7 @@ switch(Message) {
 			
 			char logtmp[comlogbuff];
 			
-			if (data.useNewline) metalog(bufferIn, serialPorts[data.sel_port].c_str(), logtmp, false);
+			if (data.useNewline) metalog(bufferIn, data.ports[data.sel_port].c_str(), logtmp, false);
 			else strcpy(logtmp, bufferIn);
 
 			log(ui.terminalwindow, logtmp);
@@ -537,10 +535,7 @@ switch(Message) {
 		//	close io thread
 		data.commstat = 1;
 		worker.join();
-		
-		//	destroy ports array
-		//clear2d(serialPorts, scanSerialPorts);
-		
+				
 		//	exit
 		PostQuitMessage(0);
 		

@@ -25,7 +25,7 @@ bool maddsua::serial::setSpeed(uint32_t baudrate) {
 
 void maddsua::serial::ioloop() {
 
-	uint16_t requests = 0;
+	int requests = 0;
 	time_t systime = GetTickCount64();
 	char openPath[16];
 	char rxTemp[PORT_CHUNK];
@@ -186,7 +186,7 @@ void maddsua::serial::ioloop() {
 }
 
 
-bool maddsua::serial::write(uint16_t comport, std::string data) {
+bool maddsua::serial::write(int comport, std::string data) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return false;
 	
@@ -196,7 +196,7 @@ bool maddsua::serial::write(uint16_t comport, std::string data) {
 	entry.buffTX += data;
 	return true;
 }
-std::string maddsua::serial::read(uint16_t comport) {
+std::string maddsua::serial::read(int comport) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return "";
 
@@ -209,7 +209,7 @@ std::string maddsua::serial::read(uint16_t comport) {
 	return temp;
 }
 
-maddsua::serial::readablePortEntry maddsua::serial::stats(uint16_t comport) {
+maddsua::serial::readablePortEntry maddsua::serial::stats(int comport) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return {};
 
@@ -263,9 +263,9 @@ std::vector <maddsua::serial::readablePortEntry> maddsua::serial::stats() {
 	return result;
 }
 
-std::vector <uint16_t> maddsua::serial::dataAvail() {
+std::vector <int> maddsua::serial::dataAvail() {
 
-	std::vector <uint16_t> result;
+	std::vector <int> result;
 
 	for (auto entry : pool) {
 		if (entry.buffRX.size())
@@ -275,7 +275,7 @@ std::vector <uint16_t> maddsua::serial::dataAvail() {
 	return result;
 }
 
-bool maddsua::serial::setPortState(uint16_t comport, maddsua::serial::portAttribs attribs) {
+bool maddsua::serial::setPortState(int comport, maddsua::serial::portAttribs attribs) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return {};
 	

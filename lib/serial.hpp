@@ -34,7 +34,7 @@ namespace maddsua {
 			struct portEntry {
 				bool active = false;
 				bool excluded = false;
-				uint16_t portIndex = 0;
+				int portIndex = 0;
 				int16_t status = PORTSTAT_DISCONN;
 
 				time_t cooldown = 0;
@@ -54,7 +54,7 @@ namespace maddsua {
 				size_t transferTX = 0;
 				size_t transferRX = 0;
 				size_t dataAvailable = 0;
-				uint16_t comport = 0;
+				int comport = 0;
 				bool excluded = false;
 				bool cooldown = false;
 				std::string status;
@@ -66,7 +66,7 @@ namespace maddsua {
 				bool ignored = false;
 			};
 
-			serial(uint16_t maxPorts) {
+			serial(int maxPorts) {
 				running = true;
 				textmode = true;
 				serialSpeed = 9600;
@@ -89,19 +89,19 @@ namespace maddsua {
 			bool setSpeed(uint32_t baudrate);
 			std::vector <uint32_t> getSpeeds();
 
-			std::vector <uint16_t> dataAvail();
+			std::vector <int> dataAvail();
 
 			std::vector <readablePortEntry> stats();
-			readablePortEntry stats(uint16_t comport);
+			readablePortEntry stats(int comport);
 
-			bool setPortState(uint16_t comport, portAttribs attribs);
+			bool setPortState(int comport, portAttribs attribs);
 
-			bool write(uint16_t comport, std::string data);
-			std::string read(uint16_t comport);
+			bool write(int comport, std::string data);
+			std::string read(int comport);
 
 		private:
 			uint32_t serialSpeed;
-			uint16_t activatePorts;
+			int activatePorts;
 			bool textmode;
 			bool running;
 			void ioloop();

@@ -1,7 +1,7 @@
 
 APP        = SerialTerminal.exe
 OBJECTS    = app.res appops.o serialcomms.o
-FLAGS      = -std=c++20 -mwindows
+FLAGS      = -std=c++20 -mwindows -g
 LIBS       = -lgdi32 -lcomdlg32
 
 .PHONY: all all-before all-after clean-custom run-custom lib demo
