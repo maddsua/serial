@@ -1,5 +1,7 @@
 ## Serial Terminal GUI version
 
+## Some big things are about to be added, so stay tuned
+
 May 1 2022 - v2.0.0
 
 This is a second, graphical version of my serial monitor/terminal utility. It is similar to Arduino IDEs Serial Monitor.
