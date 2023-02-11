@@ -87,6 +87,7 @@ namespace maddsua {
 			}
 
 			bool setSpeed(uint32_t baudrate);
+			std::vector <uint32_t> getSpeeds();
 
 			std::vector <uint16_t> dataAvail();
 
