@@ -1,6 +1,6 @@
- https://github.com/maddsua
- 
- Commands:
+https://github.com/maddsua
+
+Commands:
 
 	help		->	This command
 	

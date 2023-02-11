@@ -1,13 +1,25 @@
-/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */
-/* DO NOT EDIT! */
 
-#include <windows.h> // include for version info constants
+#include <windows.h>
 
-#include "ress.rc"
+#include "rescodes.hpp"
 
-//
-// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...
-//
+APPICON ICON "../design/icon_gui.ico"
+
+MAINMENU MENU{
+	
+	POPUP "&File"{
+ 	
+		MENUITEM "&Save log", CM_FILE_SVLOG
+		MENUITEM SEPARATOR
+		MENUITEM "&Exit", CM_FILE_EXIT
+	}
+
+	POPUP "&Help"{
+		
+		MENUITEM "&About", CM_ABOUT
+	}
+}
+
 1 VERSIONINFO
 FILEVERSION 2,0,0,979
 PRODUCTVERSION 2,0,0,979

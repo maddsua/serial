@@ -1,4 +1,4 @@
-//  2022 maddsua | https://gitlab.com/maddsua
+//  2023 maddsua | https://github.com/maddsua
 //	No warranties are given, etc...
 //	This file is a component of the Serial Terminal (graphical version)
 
@@ -10,10 +10,7 @@
 #include <string>
 #include <fstream>
 
-
-#include "staticConfig.hpp"
-
-
+#include "app.hpp"
 
 bool SaveLogFile(std::vector <std::string>* commlog, char* filepath){
 	
@@ -21,7 +18,7 @@ bool SaveLogFile(std::vector <std::string>* commlog, char* filepath){
 	
 	if(localFile.is_open()){
 		
-		for(long i = 0; i < commlog->size(); i++){
+		for (long i = 0; i < commlog->size(); i++){
 			
 			localFile << commlog->at(i);
 		}
@@ -95,12 +92,12 @@ void dropdown(HWND combo, char** items, unsigned int length, unsigned int focus,
 	if(erase){
 		int contlen = SendMessage(combo, CB_GETCOUNT, 0, 0);
 		
-		for(int i = 0; i < contlen; i++){
+		for (int i = 0; i < contlen; i++){
 			SendMessage(combo, CB_DELETESTRING, 0, 0);
 		}
 	}
 	
-	for(int i = 0; i < length; i++){					
+	for (int i = 0; i < length; i++){					
 		SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)items[i]);
 	}
 	SendMessage(combo, CB_SETCURSEL , focus, 0);
@@ -112,12 +109,12 @@ void dropdown(HWND combo, const int* items, unsigned int length, unsigned int fo
 	if(erase){
 		int contlen = SendMessage(combo, CB_GETCOUNT, 0, 0);
 		
-		for(int i = 0; i < contlen; i++){
+		for (int i = 0; i < contlen; i++){
 			SendMessage(combo, CB_DELETESTRING, 0, 0);
 		}
 	}
 	
-	for(int i = 0; i < length; i++){
+	for (int i = 0; i < length; i++){
 		
 		char tempnumstr[64];
 			sprintf(tempnumstr, "%i baud", items[i]);
@@ -134,7 +131,7 @@ unsigned int scanPorts(char** splsarray){
 	
 	unsigned int splsarrayUtil = 0;
 		
-	for(int scancom = 1; scancom < scanSerialPorts; scancom++){
+	for (int scancom = 1; scancom < scanSerialPorts; scancom++){
 		
 		bool found = false;
 		
@@ -144,7 +141,7 @@ unsigned int scanPorts(char** splsarray){
 		char compath[portPathLen];
 			sprintf(compath, "\\\\.\\%s", comname);
 		
-		HANDLE Port = CreateFile(compath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+		HANDLE Port = CreateFileA(compath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 		
 		if(Port != INVALID_HANDLE_VALUE){
 			
@@ -186,8 +183,8 @@ char*** create3d(unsigned int dim_1, unsigned int dim_2, unsigned int dim_3){
 
 
 	//	fill with zeros for 146% sure
-	for(int x = 0; x < dim_1; x++){
-		for(int y = 0; y < dim_2; y++){
+	for (int x = 0; x < dim_1; x++){
+		for (int y = 0; y < dim_2; y++){
 			for (int z = 0; z < dim_3; z++){
 				array[x][y][z] = 0;
 			}
@@ -207,8 +204,8 @@ char** create2d(unsigned int dim_1, unsigned int dim_2){
 
 
 	//	fill with zeros for 146% sure
-	for(int x = 0; x < dim_1; x++){
-		for(int y = 0; y < dim_2; y++){
+	for (int x = 0; x < dim_1; x++){
+		for (int y = 0; y < dim_2; y++){
 			array[x][y] = 0;
 		}
 	}
@@ -218,7 +215,7 @@ char** create2d(unsigned int dim_1, unsigned int dim_2){
 
 void clear3d(char*** array, unsigned int dim_1, unsigned int dim_2){
 	
-	for(int x = 0; x < dim_1; x++){
+	for (int x = 0; x < dim_1; x++){
 		for (int y = 0; y < dim_2; y++){
 			free(array[x][y]);
 		}	
@@ -229,7 +226,7 @@ void clear3d(char*** array, unsigned int dim_1, unsigned int dim_2){
 
 void clear2d(char** array, unsigned int dim_1){
 	
-	for(int x = 0; x < dim_1; x++){
+	for (int x = 0; x < dim_1; x++){
 		free(array[x]);
 	}
 	free(array);
