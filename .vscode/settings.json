@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"*.httpres": "html",
+		"app.h": "c"
+	}
+}
