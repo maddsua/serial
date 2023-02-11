@@ -1,24 +1,29 @@
-## Serial Terminal GUI version
+# Serial
 
-## Some big things are about to be added, so stay tuned
+This repo contains a few inerations of serial terminal app made by my as long as a library for easy COM port communications.
 
-May 1 2022 - v2.0.0
+## CLI Terminal
 
-This is a second, graphical version of my serial monitor/terminal utility. It is similar to Arduino IDEs Serial Monitor.
+Look like this:
 
-Features:
+---
 
-- Send and receive ASCI strings
-- Up to 64 plug and play serial ports
-- AT command panel
-- Save log to file
+<img src="design/screenshot-cli.png">
 
-Well, if you know what COM port is, you should know what this app is for.
+---
 
+Pretty simple tool, has a help command so as long as you are used to windows tools like diskpart - you won't get lost.
 
-![Image](info/interface-v2.png)
+## GUI Terminal
 
-Built with [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) 10
+Now we're getting serious. It's the second generation of this tool. Stupidly simple to use:
 
-[👉 Download app (.exe file)](build-win32/serialterminal-2.0.0.zip)
+<img src="design/screenshot-gui.png">
 
+### Note
+
+- At the moment, special characters are not supported. Will come in v4
+
+- You might ask what newline it places when the "Use newline" is active? It'll be just '\n' character (LF, 0x0A)
+
+## Lib serial-api
