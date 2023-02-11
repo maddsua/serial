@@ -1,0 +1,30 @@
+
+#include <windows.h>
+
+A ICON "../design/icon_cli.ico"
+
+1 VERSIONINFO
+FILEVERSION 1,0,4,240
+PRODUCTVERSION 1,0,4,240
+FILETYPE VFT_APP
+{
+	BLOCK "StringFileInfo"
+	{
+		BLOCK "040904E4"
+		{
+			VALUE "CompanyName", "maddsua"
+			VALUE "FileVersion", "1.0.4.240"
+			VALUE "FileDescription", "Serial Terminal"
+			VALUE "InternalName", "SerialTerminal"
+			VALUE "LegalCopyright", "https://github.com/maddsua"
+			VALUE "LegalTrademarks", "2022 maddsua/dev"
+			VALUE "OriginalFilename", "serter"
+			VALUE "ProductName", "Serial Terminal"
+			VALUE "ProductVersion", "1.0.4.240"
+		}
+	}
+	BLOCK "VarFileInfo"
+	{
+		VALUE "Translation", 0x0409, 1252
+	}
+}
