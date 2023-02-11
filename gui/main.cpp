@@ -46,7 +46,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (!RegisterClassExA(&wc)) {
 		MessageBoxA(NULL, "Window Registration Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-		return 0;
+		return 1;
 	}
 	
 	//	calc window position (1/8 left; 1/10 top)
@@ -57,20 +57,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		winPosx, winPosy, windowSizeX, windowSizeY,
 		NULL, NULL, hInstance, NULL);
 
-	if (hwnd == NULL) {
+	if (!hwnd) {
 		MessageBoxA(NULL, "Window Creation Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-		return 0;
+		return 2;
 	}
 
-	while(GetMessage(&msg, NULL, 0, 0) > 0) {
+	while (GetMessage(&msg, NULL, 0, 0) > 0) {
 	
 		// skip msg translation to prevent sound	
-		if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN)
-			goto dspmsg;
-	
-		TranslateMessage(&msg);
-		
-	dspmsg:
+		if (/*msg.message == WM_KEYDOWN &&*/ msg.wParam != VK_RETURN) {
+			TranslateMessage(&msg);
+		}
+
 		DispatchMessage(&msg);
 	}
 	
