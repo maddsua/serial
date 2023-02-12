@@ -285,6 +285,14 @@ std::string maddsua::serial::read(portEntry& entry) {
 	return {};
 }
 
+/*
+    ██ ███    ██ ███████  ██████  
+    ██ ████   ██ ██      ██    ██ 
+    ██ ██ ██  ██ █████   ██    ██ 
+    ██ ██  ██ ██ ██      ██    ██ 
+    ██ ██   ████ ██       ██████  
+*/
+
 maddsua::serial::portEntryInfo maddsua::serial::stats(uint32_t comport) {
 
 	for (auto entry : pool) {
@@ -322,6 +330,14 @@ std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
 	return result;
 }
 
+/*
+    ███████  ██████   ██████ ██    ██ ███████ 
+    ██      ██    ██ ██      ██    ██ ██      
+    █████   ██    ██ ██      ██    ██ ███████ 
+    ██      ██    ██ ██      ██    ██      ██ 
+    ██       ██████   ██████  ██████  ███████ 
+
+*/
 
 bool maddsua::serial::setFocus(uint32_t comport) {
 
