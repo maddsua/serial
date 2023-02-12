@@ -43,6 +43,13 @@ maddsua::serial::~serial() {
 	if (daemon.joinable()) daemon.join();
 }
 
+void portShutdown(HANDLE& porthandle) {
+	EscapeCommFunction(porthandle, CLRDTR);
+	PurgeComm(porthandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+	if (CloseHandle(porthandle)) porthandle = nullptr;
+	//CloseHandle(porthandle);
+}
+
 
 /*
     ███████ ███████ ████████ ████████ ██ ███    ██  ██████  ███████ 
@@ -90,10 +97,7 @@ void maddsua::serial::ioloop() {
 		for (auto& entry : pool) {
 
 			if (entry.excluded) {
-				if (entry.portHandle) {
-					CloseHandle(entry.portHandle);
-					// entry.portHandle = nullptr;
-				}
+				if (entry.portHandle) portShutdown(entry.portHandle);
 				continue;
 			}
 
@@ -117,7 +121,7 @@ void maddsua::serial::ioloop() {
 						entry.status = SPSTAT_BUSY;
 					}
 
-					CloseHandle(entry.portHandle);
+					//CloseHandle(entry.portHandle);
 					// entry.portHandle = nullptr;
 
 					entry.linePending = 0;
@@ -137,7 +141,8 @@ void maddsua::serial::ioloop() {
 
 					COMMTIMEOUTS timeouts = {1, 1, 1, 1, 1};
 					if (!SetCommTimeouts(entry.portHandle, &timeouts)){
-						CloseHandle(entry.portHandle);
+						portShutdown(entry.portHandle);
+						//CloseHandle(entry.portHandle);
 						// entry.portHandle = nullptr;
 						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
@@ -146,7 +151,8 @@ void maddsua::serial::ioloop() {
 
 					DCB settings = {0};
 					if (!GetCommState(entry.portHandle, &settings)) {
-						CloseHandle(entry.portHandle);
+						portShutdown(entry.portHandle);
+						//CloseHandle(entry.portHandle);
 						// entry.portHandle = nullptr;
 						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
@@ -158,8 +164,9 @@ void maddsua::serial::ioloop() {
 						settings.StopBits = ONESTOPBIT;
 						settings.Parity = NOPARITY;
 
-					if (!SetCommState(entry.portHandle, &settings)){
-						CloseHandle(entry.portHandle);
+					if (!SetCommState(entry.portHandle, &settings)) {
+						portShutdown(entry.portHandle);
+						//CloseHandle(entry.portHandle);
 						// entry.portHandle = nullptr;
 						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
@@ -172,7 +179,8 @@ void maddsua::serial::ioloop() {
 					continue;
 				}
 	
-				CloseHandle(entry.portHandle);
+				portShutdown(entry.portHandle);
+				//CloseHandle(entry.portHandle);
 				// entry.portHandle = nullptr;
 				entry.status = SPSTAT_AVAILABLE;
 				entry.cooldown = (systime + PORT_CD_FAST_MS);
@@ -187,7 +195,8 @@ void maddsua::serial::ioloop() {
 			if (entry.buffTX.size()) {
 				auto sendDataSize = entry.buffTX.size();
 				if (!WriteFile(entry.portHandle, entry.buffTX.data(), entry.buffTX.size(), NULL, NULL)){
-					CloseHandle(entry.portHandle);
+					portShutdown(entry.portHandle);
+					//CloseHandle(entry.portHandle);
 					// entry.portHandle = nullptr;
 					entry.status = SPSTAT_IOERROR;
 					entry.cooldown = (systime + PORT_COOLDOWN_MS);
@@ -199,7 +208,8 @@ void maddsua::serial::ioloop() {
 
 			//	receive data
 			if (!ReadFile(entry.portHandle, &rxTemp, PORT_CHUNK, &rxBytesRead, NULL)){
-				CloseHandle(entry.portHandle);
+				portShutdown(entry.portHandle);
+				//CloseHandle(entry.portHandle);
 				// entry.portHandle = nullptr;
 				entry.status = SPSTAT_IOERROR;
 				entry.cooldown = (systime + PORT_COOLDOWN_MS);
@@ -235,8 +245,10 @@ void maddsua::serial::ioloop() {
 
 	//	close all when exiting
 	for (auto& entry : pool) {
-		if (entry.portHandle)
-			CloseHandle(entry.portHandle);
+		if (entry.portHandle) {
+			portShutdown(entry.portHandle);
+		}
+		//CloseHandle(entry.portHandle);
 	}
 }
 
@@ -364,7 +376,8 @@ bool maddsua::serial::clearFocus() {
 
 	for (auto& entry : pool) {
 		if (entry.focus) {
-			CloseHandle(entry.portHandle);
+			portShutdown(entry.portHandle);
+			//CloseHandle(entry.portHandle);
 			//printf("Closing handle:%i\r\n", CloseHandle(entry.portHandle));
 			// entry.portHandle = nullptr;
 			entry.status = SPSTAT_AVAILABLE;
