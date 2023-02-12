@@ -103,8 +103,7 @@ void maddsua::serial::ioloop() {
 				entry.portHandle = CreateFileA(openPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
 				//	if disconnected or error, do cleanup
-				bool unaccessable = (entry.portHandle == INVALID_HANDLE_VALUE);
-				if (unaccessable) {
+				if (entry.portHandle == INVALID_HANDLE_VALUE) {
 
 					auto errcode = GetLastError();
 					if (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) {
@@ -118,6 +117,9 @@ void maddsua::serial::ioloop() {
 						entry.status = SPSTAT_BUSY;
 					}
 
+					CloseHandle(entry.portHandle);
+					// entry.portHandle = nullptr;
+
 					entry.linePending = 0;
 					entry.transferRX = 0;
 					entry.transferTX = 0;
@@ -125,9 +127,6 @@ void maddsua::serial::ioloop() {
 					entry.buffRX.clear();
 					entry.buffTX.clear();
 					entry.deviceID.clear();
-
-					CloseHandle(entry.portHandle);
-					// entry.portHandle = nullptr;
 
 					continue;
 				}
@@ -333,7 +332,7 @@ std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
 
 	for (auto entry : pool) {
 		result.push_back(stats(entry));
-		//printf("COM%i:%i\r\n", entry.port, entry.portHandle);
+		printf("COM%i:%i\r\n", entry.port, entry.portHandle);
 	}
 
 	return result;
