@@ -26,10 +26,10 @@ maddsua::serial::serial(uint32_t maxPorts, bool parallel) {
 	textmode = true;
 	parallelOps = parallel;
 	serialSpeed = 9600;
-	activatePorts = (maxPorts < PORTS_COMSMAX) ? maxPorts : PORTS_COMSMAX;
+	activatePorts = ((maxPorts + PORT_FIRST) < PORTS_COMSMAX) ? maxPorts : PORTS_COMSMAX;
 
 	//	create port port entries
-	for (size_t i = PORT_FIRST; i < activatePorts; i++) {
+	for (size_t i = PORT_FIRST; i < activatePorts + PORT_FIRST; i++) {
 		portEntry temp;
 			temp.port = i;
 		pool.push_back(std::move(temp));
