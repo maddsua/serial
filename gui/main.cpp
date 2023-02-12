@@ -107,9 +107,14 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 //	-------		app itself
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 
-
 	static uiElements ui;
 	static uiData data;
+		data.endlines = {
+			{"CR+LF", "\r\n"},
+			{"No endline", {/* empty line */}},
+			{"CR only", "\r"},
+			{"LF only", "\n"}
+		};
 
 	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
 	
@@ -127,7 +132,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			SetTimer(hwnd, TIMER_PORTSLIST, TIMEOUT_PORTSLIST, NULL);
 
 			//	redirect keypress event for input form
-			mainevents = (WNDPROC)SetWindowLongPtr(ui.commprompt, GWLP_WNDPROC, (LONG_PTR)keyboardEvents);
+			mainevents = (WNDPROC)SetWindowLongPtr(ui.cmdInput, GWLP_WNDPROC, (LONG_PTR)keyboardEvents);
 
 			break;
 		}
@@ -143,10 +148,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case GUI_COMBO_PORT: {
 							
 							//	select a different port
-							size_t temp = SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
+							size_t temp = SendMessageW(ui.comboPort, CB_GETCURSEL, 0, 0);
 							//	exit if it's the same
 							if (temp == data.sel_port) break;
-							
+
 							//	assing port
 							data.sel_port = temp;
 							//	reset
@@ -158,7 +163,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case GUI_COMBO_SPEED: {
 							
 							//	select different speed
-							size_t temp = SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);	
+							size_t temp = SendMessageW(ui.comboSpeed, CB_GETCURSEL, 0, 0);	
 							//	exit if it's the same
 							if (temp == data.sel_speed) break;
 
@@ -180,27 +185,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						
 						case GUI_BTN_CLR: {
 							
-							
-							//	update port list
-							//scanPorts(&data.ports);
-							//dropdown(&ui.comboport, &data.ports, data.sel_port, true);
-							
-							//	flush buffers
-							//memset(bufferIn, 0, sizeof(bufferIn));
-							//memset(bufferOut, 0, sizeof(bufferOut));
-							
 							//	clear log
 							data.log.clear();
 							
 							//	erase texts
-							SetWindowText(ui.commprompt, 0);
+							SetWindowText(ui.cmdInput, 0);
 							SetWindowText(ui.terminal, 0);
-							
-							//	reconnect
-							//memset(porttemp, 0, sizeof(porttemp));
-							//memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
-							//worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 
+							//	reset serial comms
+							resetComms(serial, &ui, &data);
+							
 							break;
 						}
 						
@@ -211,7 +205,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							
 							//	get command trom input control
 							char userCommand[commsgbuff];
-							GetWindowTextA(ui.commprompt, userCommand, commsgbuff);
+							GetWindowTextA(ui.cmdInput, userCommand, commsgbuff);
 							
 							//	process command
 							if (strlen(userCommand) > 0) {
@@ -256,7 +250,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 								//strcpy(bufferOut, userCommand);
 								
 								//	clear command prompt
-								SetWindowText(ui.commprompt, 0);
+								SetWindowText(ui.cmdInput, 0);
 							}
 							
 							break;
@@ -266,14 +260,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case GUI_AT_PREF: {
 							
 							//	copy text to command prompt
-							SetWindowTextA(ui.commprompt, "AT+");
+							SetWindowTextA(ui.cmdInput, "AT+");
 							
 							//	set focus
-							SetFocus(ui.commprompt);
+							SetFocus(ui.cmdInput);
 							
 							//	set text curcor position
-							int TextLen = SendMessage(ui.commprompt, WM_GETTEXTLENGTH, 0, 0);
-							SendMessage(ui.commprompt, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
+							int TextLen = SendMessage(ui.cmdInput, WM_GETTEXTLENGTH, 0, 0);
+							SendMessage(ui.cmdInput, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
 							
 							break;
 						}
@@ -367,11 +361,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 									}
 								
 								//	paste cmd
-								SetWindowTextA(ui.commprompt, data.cmdHistory[data.historyItem].c_str());
+								SetWindowTextA(ui.cmdInput, data.cmdHistory[data.historyItem].c_str());
 									
 								//	set text curcor position
-								int TextLen = SendMessage(ui.commprompt, WM_GETTEXTLENGTH, 0, 0);
-								SendMessage(ui.commprompt, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
+								int TextLen = SendMessage(ui.cmdInput, WM_GETTEXTLENGTH, 0, 0);
+								SendMessage(ui.cmdInput, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
 							}
 							
 							break;
@@ -386,7 +380,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		}
 		
 		case WM_SETFOCUS: 
-			SetFocus(ui.commprompt);
+			SetFocus(ui.cmdInput);
 		break;
 		
 		case WM_TIMER: {
@@ -438,7 +432,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 				//data.commstat = 0;
 
-			} else if (wParam == TIMER_PORTSLIST) updateComPorts(serial, &ui, &data);
+			} else if (wParam == TIMER_PORTSLIST) {
+
+				updateComPorts(serial, &ui, &data);
+			}
 
 			break;
 		}

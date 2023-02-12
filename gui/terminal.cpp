@@ -5,13 +5,10 @@
 
 void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 
-	//	drop lists
-	ui->comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-
 	//	serial speeds dropdown
 	//	it isn't gonna be updated coz speeds are hardcoded to the library
 	//	so render it only once and then just use as intended
-	ui->combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
+	ui->comboSpeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
 	{
 		std::vector <std::string> temp;
 
@@ -27,20 +24,37 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 			}
 		}
 
-		dropdown(&ui->combospeed, &temp, data->sel_speed, false);
+		dropdown(&ui->comboSpeed, &temp, data->sel_speed, false);
+	}
+
+	//	port selector
+	//	the items are gonna be assigned by the update timer callback
+	//	so gonna leave it empty for now
+	ui->comboPort = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
+
+	//	line ending selector
+	ui->comboLine = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
+	{
+		std::vector <std::string> temp;
+
+		for (auto item : data->endlines) {
+			temp.push_back(item.title);
+		}
+
+		dropdown(&ui->comboLine, &temp, data->sel_endline, false);
 	}
 		
 	
-	//	log
+	//	terminal windwos itself
 	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
 		
 	//	input	
-	ui->commprompt = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
+	ui->cmdInput = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
 	
 	//	buttons
-	ui->senditbtn = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
+	ui->btnSend = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
 	
-	ui->clearbtn = CreateWindowA(WC_BUTTONA, "Reset", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
+	ui->btnClear = CreateWindowA(WC_BUTTONA, "Reset", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
 	
 	//	checkboxes
 	ui->newlinecheck = CreateWindowA(WC_BUTTONA, "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, *appwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
@@ -168,7 +182,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 			dropitems.push_back("COM" + std::to_string(item));
 
 		//	rerender dropdown
-		dropdown(&ui->comboport, &dropitems, data->sel_port, true);
+		dropdown(&ui->comboPort, &dropitems, data->sel_port, true);
 	}
 
 	//	check if selected port is connected

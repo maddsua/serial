@@ -21,6 +21,7 @@ const std::array<uint32_t, 17> comSpeeds = {
      ██████ ███████ ██   ██ ███████ ███████ 
 
 */
+
 maddsua::serial::serial(uint32_t maxPorts, bool parallel) {
 	running = true;
 	textmode = true;
@@ -57,6 +58,7 @@ void portShutdown(HANDLE& porthandle) {
          ██ ██         ██       ██    ██ ██  ██ ██ ██    ██      ██ 
     ███████ ███████    ██       ██    ██ ██   ████  ██████  ███████ 
 */
+
 std::vector <uint32_t> maddsua::serial::getSpeeds() {
 	return std::vector <uint32_t> (comSpeeds.begin(), comSpeeds.end());
 };
@@ -80,6 +82,7 @@ bool maddsua::serial::setSpeed(uint32_t baudrate) {
     ██   ██ ██   ██ ██      ██  ██  ██ ██    ██ ██  ██ ██ 
     ██████  ██   ██ ███████ ██      ██  ██████  ██   ████ 
 */
+
 void maddsua::serial::ioloop() {
 
 	int requests = 0;

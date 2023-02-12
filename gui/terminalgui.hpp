@@ -16,11 +16,12 @@
 
 	struct uiElements {
 		HWND terminal;
-		HWND combospeed;
-		HWND comboport;
-		HWND commprompt;
-		HWND senditbtn;
-		HWND clearbtn;
+		HWND cmdInput;
+		HWND comboSpeed;
+		HWND comboPort;
+		HWND comboLine;
+		HWND btnSend;
+		HWND btnClear;
 		HWND newlinecheck;
 		HWND extended;
 		
@@ -30,9 +31,15 @@
 		HWND atbtn_prefix;
 	};
 
+	struct endlineoption {
+		std::string title;
+		std::string bytes;
+	};
+
 	struct uiData {
 		std::vector <uint32_t> speeds;
 		std::vector <uint32_t> ports;
+		std::vector <endlineoption> endlines;
 
 		std::vector <std::string> log;
 		std::vector <std::string> cmdHistory;
@@ -42,6 +49,7 @@
 
 		size_t sel_speed = 0;
 		size_t sel_port = 0;
+		size_t sel_endline = 0;
 		size_t historyItem = 0;
 
 		bool viewHistory = false;
@@ -55,6 +63,7 @@
 	void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata);
 	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
 	void resetComms(maddsua::serial* serial, uiElements* ui, uiData* data);
+	void printComm(uiElements* ui, uiData* data, std::string* message, bool RX, int mode);
 
 
 #endif
