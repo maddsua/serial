@@ -47,8 +47,8 @@ void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool 
 	}
 	
 	for (int i = 0; i < items->size(); i++) {
-		std::string temp = items->at(i);
-		SendMessage(*combo, CB_ADDSTRING, 0, (LPARAM)temp.c_str());
+		std::string listPorts = items->at(i);
+		SendMessage(*combo, CB_ADDSTRING, 0, (LPARAM)listPorts.c_str());
 	}
 
 	SendMessage(*combo, CB_SETCURSEL , focus, 0);
@@ -99,8 +99,17 @@ void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 
-	auto temp = serial->portsFree();
-	if (temp != data->portIndexes) {
+	auto stats = serial->stats();
+	std::vector <uint32_t> listPorts;
+
+	for (auto entry : stats) {
+		if (entry.status == SPSTAT_ACTIVE || entry.status == SPSTAT_AVAILABLE) {
+			listPorts.push_back(entry.port);
+			break;
+		}
+	}
+
+	if (listPorts != data->portIndexes) {
 		
 		//	get item that already selected
 		if (data->sel_port < data->portIndexes.size()) {
@@ -108,16 +117,16 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 			auto selected = data->portIndexes.at(data->sel_port);
 
 			//	move dropdown selection
-			data->sel_port = temp.size() ? temp.size() - 1 : 0;
-			for (size_t i = 0; i < temp.size(); i++) {
-				if (temp[i] == selected) {
+			data->sel_port = listPorts.size() ? listPorts.size() - 1 : 0;
+			for (size_t i = 0; i < listPorts.size(); i++) {
+				if (listPorts[i] == selected) {
 					data->sel_port = i;
 					break;
 				}
 			}
 		}
 
-		data->portIndexes = temp;
+		data->portIndexes = listPorts;
 
 		data->ports.clear();
 		for (auto item : data->portIndexes) {
@@ -129,13 +138,13 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 	}
 
 	//	check if selected port is connected
-	if (data->sel_port < data->portIndexes.size()) {
+	/*if (data->sel_port < data->portIndexes.size()) {
 
 		auto entry = serial->stats(data->portIndexes.at(data->sel_port));
 
 		if (!entry.focus) {
 			auto res = serial->setFocus(entry.port);
 		}
-	}
+	}*/
 	
 }

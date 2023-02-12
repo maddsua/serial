@@ -10,7 +10,7 @@
 
 int main() {
 
-	auto serial = new maddsua::serial(8, true);
+	auto serial = new maddsua::serial(8, false);
 	serial->setSpeed(9600);
 
 /*	int helloCount = 0;
@@ -47,8 +47,8 @@ int main() {
 		auto stats = serial->stats();
 
 		for (auto entry : stats) {
-			//std::cout << entry.status << std::endl;
-			if (entry.port == 3 && !entry.focus) entry.focus = true;
+			std::cout << entry.port << ":" << entry.status << std::endl;
+			if (entry.port == 3 && !entry.focus) serial->setFocus(entry.port);
 
 			if (entry.focus) {
 				if (entry.dataAvailable) {

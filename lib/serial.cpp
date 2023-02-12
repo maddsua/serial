@@ -128,7 +128,7 @@ void maddsua::serial::ioloop() {
 
 					continue;
 
-				} else if (!parallelOps) {
+				} else if (!parallelOps && !entry.focus) {
 					CloseHandle(entry.portHandle);
 					entry.status = SPSTAT_AVAILABLE;
 					entry.cooldown = (systime + PORT_CD_FAST_MS);
@@ -347,8 +347,8 @@ std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
 
 bool maddsua::serial::setFocus(uint32_t comport) {
 
-	for (auto entry : pool) {
-		if (entry.port == comport) {
+	for (auto& entry : pool) {
+		if (entry.port == comport && entry.status == SPSTAT_AVAILABLE) {
 			clearFocus();
 			entry.focus = true;
 			return true;
