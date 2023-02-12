@@ -250,7 +250,7 @@ void maddsua::serial::ioloop() {
 
 bool maddsua::serial::write(uint32_t comport, std::string data) {
 
-	for (auto entry : pool) {
+	for (auto& entry : pool) {
 		if ((entry.port == comport && entry.status == SPSTAT_ACTIVE) || (entry.focus && entry.status == SPSTAT_ACTIVE)) {
 			entry.buffTX += data;
 			return true;
@@ -270,7 +270,7 @@ bool maddsua::serial::write(portEntry& entry, std::string data) {
 }
 std::string maddsua::serial::read(uint32_t comport) {
 
-	for (auto entry : pool) {
+	for (auto& entry : pool) {
 		if ((entry.port == comport && entry.status == SPSTAT_ACTIVE) || (entry.focus && entry.status == SPSTAT_ACTIVE)) {
 			auto temp = entry.buffRX;
 			entry.buffRX.clear();
@@ -283,9 +283,9 @@ std::string maddsua::serial::read(uint32_t comport) {
 std::string maddsua::serial::read(portEntry& entry) {
 
 	if (entry.status == SPSTAT_ACTIVE) {
-			auto temp = entry.buffRX;
-			entry.buffRX.clear();
-			return temp;
+		auto temp = entry.buffRX;
+		entry.buffRX.clear();
+		return temp;
 	}
 
 	return {};
@@ -301,7 +301,7 @@ std::string maddsua::serial::read(portEntry& entry) {
 
 maddsua::serial::portEntryInfo maddsua::serial::stats(uint32_t comport) {
 
-	for (auto entry : pool) {
+	for (auto& entry : pool) {
 		if (entry.port == comport) {
 			return stats(entry);
 		}
@@ -330,7 +330,7 @@ std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
 
 	std::vector <portEntryInfo> result;
 
-	for (auto entry : pool) {
+	for (auto& entry : pool) {
 		result.push_back(stats(entry));
 		printf("COM%i:%i\r\n", entry.port, entry.portHandle);
 	}
