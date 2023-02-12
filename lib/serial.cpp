@@ -92,19 +92,19 @@ void maddsua::serial::ioloop() {
 			if (entry.excluded) {
 				if (entry.portHandle) {
 					CloseHandle(entry.portHandle);
-					entry.portHandle = nullptr;
+					// entry.portHandle = nullptr;
 				}
 				continue;
 			}
 
-			//	try to establish a connection or perform cleanup
+			//	discovery
 			if (entry.status != SPSTAT_ACTIVE && entry.cooldown < systime) {
-				memset(openPath, 0, 16);
 				snprintf(openPath, 15, "\\\\.\\COM%i", entry.port);
 				entry.portHandle = CreateFileA(openPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
 				//	if disconnected or error, do cleanup
-				if (entry.portHandle == INVALID_HANDLE_VALUE) {
+				bool unaccessable = (entry.portHandle == INVALID_HANDLE_VALUE);
+				if (unaccessable) {
 
 					auto errcode = GetLastError();
 					if (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) {
@@ -126,25 +126,20 @@ void maddsua::serial::ioloop() {
 					entry.buffTX.clear();
 					entry.deviceID.clear();
 
-					continue;
-
-				} else if (!parallelOps && !entry.focus) {
 					CloseHandle(entry.portHandle);
-					entry.status = SPSTAT_AVAILABLE;
-					entry.cooldown = (systime + PORT_CD_FAST_MS);
+					// entry.portHandle = nullptr;
+
+					continue;
 				}
 
-				if (!parallelOps && !entry.focus) continue;
-
-				//	perform setup
-				{
+				if (parallelOps || entry.focus) {
 					EscapeCommFunction(entry.portHandle, CLRDTR);
 					PurgeComm(entry.portHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 
 					COMMTIMEOUTS timeouts = {1, 1, 1, 1, 1};
 					if (!SetCommTimeouts(entry.portHandle, &timeouts)){
 						CloseHandle(entry.portHandle);
-						entry.portHandle = nullptr;
+						// entry.portHandle = nullptr;
 						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
 						continue;
@@ -153,7 +148,7 @@ void maddsua::serial::ioloop() {
 					DCB settings = {0};
 					if (!GetCommState(entry.portHandle, &settings)) {
 						CloseHandle(entry.portHandle);
-						entry.portHandle = nullptr;
+						// entry.portHandle = nullptr;
 						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
 						continue;
@@ -166,7 +161,7 @@ void maddsua::serial::ioloop() {
 
 					if (!SetCommState(entry.portHandle, &settings)){
 						CloseHandle(entry.portHandle);
-						entry.portHandle = nullptr;
+						// entry.portHandle = nullptr;
 						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
 						continue;
@@ -174,12 +169,17 @@ void maddsua::serial::ioloop() {
 
 					//	setup complete
 					entry.status = SPSTAT_ACTIVE;
-				}
 
-				//	skip this cycle
-				//	it's unlikely that a device is already transmitting	
+					continue;
+				}
+	
+				CloseHandle(entry.portHandle);
+				// entry.portHandle = nullptr;
+				entry.status = SPSTAT_AVAILABLE;
+				entry.cooldown = (systime + PORT_CD_FAST_MS);
 				continue;
 			}
+
 
 			//	IO operations
 			if (entry.status != SPSTAT_ACTIVE) continue;
@@ -189,7 +189,7 @@ void maddsua::serial::ioloop() {
 				auto sendDataSize = entry.buffTX.size();
 				if (!WriteFile(entry.portHandle, entry.buffTX.data(), entry.buffTX.size(), NULL, NULL)){
 					CloseHandle(entry.portHandle);
-					entry.portHandle = nullptr;
+					// entry.portHandle = nullptr;
 					entry.status = SPSTAT_IOERROR;
 					entry.cooldown = (systime + PORT_COOLDOWN_MS);
 					continue;
@@ -201,7 +201,7 @@ void maddsua::serial::ioloop() {
 			//	receive data
 			if (!ReadFile(entry.portHandle, &rxTemp, PORT_CHUNK, &rxBytesRead, NULL)){
 				CloseHandle(entry.portHandle);
-				entry.portHandle = nullptr;
+				// entry.portHandle = nullptr;
 				entry.status = SPSTAT_IOERROR;
 				entry.cooldown = (systime + PORT_COOLDOWN_MS);
 				continue;
@@ -236,7 +236,8 @@ void maddsua::serial::ioloop() {
 
 	//	close all when exiting
 	for (auto& entry : pool) {
-		if (entry.portHandle) CloseHandle(entry.portHandle);
+		if (entry.portHandle)
+			CloseHandle(entry.portHandle);
 	}
 }
 
@@ -330,8 +331,10 @@ std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
 
 	std::vector <portEntryInfo> result;
 
-	for (auto entry : pool)
+	for (auto entry : pool) {
 		result.push_back(stats(entry));
+		//printf("COM%i:%i\r\n", entry.port, entry.portHandle);
+	}
 
 	return result;
 }
@@ -363,7 +366,7 @@ bool maddsua::serial::clearFocus() {
 	for (auto& entry : pool) {
 		if (entry.focus) {
 			CloseHandle(entry.portHandle);
-			entry.portHandle = nullptr;
+			// entry.portHandle = nullptr;
 			entry.status = SPSTAT_AVAILABLE;
 			entry.cooldown = (timeGetTime() + PORT_CD_FAST_MS);
 			return true;

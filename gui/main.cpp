@@ -111,7 +111,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	static uiElements ui;
 	static uiData data;
 
-	static auto serial = new maddsua::serial(scanSerialPorts, false);
+	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
 
 	//static char bufferIn[commsgbuff];
 	//static char bufferOut[commsgbuff];
@@ -447,7 +447,7 @@ switch(Message) {
 	}
 	
 	case WM_DESTROY: {
-		
+
 		delete serial;
 		PostQuitMessage(0);
 
