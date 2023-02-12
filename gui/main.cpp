@@ -372,38 +372,17 @@ switch(Message) {
 					case CM_ABOUT:
 						displayAboutMessage();
 					break;
+										
+					case CM_FILE_SVLOG: 
+						saveLogDialog(&hwnd, &data.commLog);
+					break;
 					
 					
-					case CM_FILE_SVLOG: {
-						
-						OPENFILENAMEA ofn = {0};
-							char fpath[MAX_PATH] = {0};
-							
-						ofn.lStructSize = sizeof(ofn);
-						ofn.hwndOwner = hwnd;
-						ofn.lpstrFilter = "Log Files (*.log)\0*.log\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
-						ofn.lpstrFile = fpath;
-						ofn.nMaxFile = MAX_PATH;
-						ofn.lpstrDefExt = "txt";
-
-						ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-						
-						if (GetSaveFileNameA(&ofn)) {
-							
-							if (!SaveLogFile(&data.commLog, ofn.lpstrFile)) {
-								MessageBoxA(hwnd, "Save file failed.", "Error", MB_OK | MB_ICONEXCLAMATION);
-							}
-						}
-	
-						break;
-					}
-					
-					case CM_FILE_EXIT:{
-						
+					case CM_FILE_EXIT: 
 						data.commstat = 1;
 						PostMessage(hwnd, WM_CLOSE, 0, 0);
-						break;
-					}
+					break;
+					
 					
 					//	custom events
 					case ICEV_CMDLIST: {
