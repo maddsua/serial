@@ -366,6 +366,7 @@ bool maddsua::serial::clearFocus() {
 	for (auto& entry : pool) {
 		if (entry.focus) {
 			CloseHandle(entry.portHandle);
+			//printf("Closing handle:%i\r\n", CloseHandle(entry.portHandle));
 			// entry.portHandle = nullptr;
 			entry.status = SPSTAT_AVAILABLE;
 			entry.cooldown = (timeGetTime() + PORT_CD_FAST_MS);
