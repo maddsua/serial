@@ -1,6 +1,6 @@
 # Serial
 
-This repo contains a few iterations of serial terminal app made by my as long as a library for easy COM port communications.
+This repo contains a few iterations of serial terminal app made by myself as long as a library for easy COM port communications.
 
 ## Building process
 
