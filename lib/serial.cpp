@@ -1,3 +1,7 @@
+//	2023 maddsua's serial lib
+//	v1.0.0
+//	https://github.com/maddsua
+
 #include "serial.hpp"
 
 
