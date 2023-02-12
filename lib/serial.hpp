@@ -56,9 +56,10 @@ namespace maddsua {
 				size_t transferTX = 0;
 				size_t transferRX = 0;
 				size_t dataAvailable = 0;
-				int comport = 0;
+				uint32_t comport = 0;
 				bool excluded = false;
 				bool cooldown = false;
+				bool focus = false;
 				std::string status;
 				std::string id;
 			};
@@ -76,9 +77,9 @@ namespace maddsua {
 				activatePorts = (maxPorts < PORTS_COMSMAX) ? maxPorts : PORTS_COMSMAX;
 
 				//	create port port entries
-				for (size_t i = 0; i < activatePorts; i++) {
+				for (size_t i = PORT_FIRST; i < activatePorts; i++) {
 					portEntry temp;
-						temp.portIndex = (i + PORT_FIRST);
+						temp.portIndex = i;
 					pool.push_back(std::move(temp));
 				}
 

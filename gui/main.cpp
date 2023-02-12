@@ -140,7 +140,7 @@ switch(Message) {
 				}
 			}
 			data.sel_speed = data.speeds.size() ? data.speeds.size() - 1 : 0;
-		}			
+		}
 
 		uiInit(&hwnd, &ui, &data);
 		
@@ -172,19 +172,16 @@ switch(Message) {
 						
 						//	select
 						data.sel_port = (int)SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
-						
-						//	reconnect
-						//memset(porttemp, 0, sizeof(porttemp));
-						//memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
-						//worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
-							
+													
 						break;
 					}
+
 					case GUI_COMBO_SPEED: {
 						data.sel_speed = (int)SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
 						break;
 					}
 				}
+
 				break;
 			}
 			
@@ -192,7 +189,6 @@ switch(Message) {
 				
 				switch(LOWORD(wParam)) {
 					
-					//	clear button
 					case GUI_BTN_CLR: {
 						
 						
@@ -408,7 +404,7 @@ switch(Message) {
 
 		if (wParam == CYCLE_PRINT) {
 
-			if (!/*data.commstat &&*/ strlen(bufferIn) > 0) {
+			/*if ( strlen(bufferIn) > 0) {
 				
 				char logtmp[comlogbuff];
 				
@@ -419,7 +415,7 @@ switch(Message) {
 				data.commLog.push_back(logtmp);
 				
 				memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
-			}
+			}*/
 
 			/*switch (data.commstat) {
 				case 2:

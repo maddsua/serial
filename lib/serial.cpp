@@ -246,13 +246,14 @@ maddsua::serial::readablePortEntry maddsua::serial::stats(uint32_t comport) {
 maddsua::serial::readablePortEntry maddsua::serial::stats(portEntry& entry) {
 
 	readablePortEntry temp;
-		temp.comport = entry.portIndex;
+		temp.comport = entry.portIndex + PORT_FIRST;
 		temp.cooldown = entry.cooldown > 0 ? true : false;
 		temp.excluded = entry.excluded;
 		temp.dataAvailable = entry.buffRX.size();
 		temp.id = entry.deviceID;
 		temp.transferRX = entry.transferRX;
 		temp.transferTX = entry.transferTX;
+		temp.focus = entry.focus;
 
 	switch (entry.status) {
 		case SPSTAT_AVAILABLE:
@@ -354,6 +355,8 @@ bool maddsua::serial::setFocus(uint32_t comport) {
 
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return false;
+
+	clearFocus();
 
 	auto& entry = pool[comport];
 	entry.focus = true;

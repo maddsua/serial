@@ -130,10 +130,12 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 
 	//	check if selected port is connected
 	if (data->sel_port < data->portIndexes.size()) {
-		auto selected = data->portIndexes.at(data->sel_port);
+
 		auto entry = serial->stats(data->portIndexes.at(data->sel_port));
 
-		//if (!entry.f)
+		if (!entry.focus) {
+			auto res = serial->setFocus(entry.comport);
+		}
 	}
 	
 }
