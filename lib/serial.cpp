@@ -126,6 +126,8 @@ void maddsua::serial::ioloop() {
 					entry.buffTX.clear();
 					entry.deviceID.clear();
 
+					continue;
+
 				} else if (!parallelOps) {
 					CloseHandle(entry.portHandle);
 					entry.status = SPSTAT_AVAILABLE;
