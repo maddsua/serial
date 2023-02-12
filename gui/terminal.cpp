@@ -1,37 +1,38 @@
 #include "terminalgui.hpp"
 
 #include <fstream>
+#include <stdio.h>
 
 void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
+
 	//	drop lists
 	ui->comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-	dropdown(&ui->comboport, &data->ports, data->sel_port, true);
 		
 	ui->combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
 	dropdown(&ui->combospeed, &data->speeds, data->sel_speed, false);
 	
 	//	log
-	ui->terminalwindow = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
+	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
 		
 	//	input	
 	ui->commprompt = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
 	
 	//	buttons
-	ui->senditbtn = CreateWindowA("BUTTON", "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
+	ui->senditbtn = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
 	
-	ui->clearbtn = CreateWindowA("BUTTON", "Clear&&Update", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
+	ui->clearbtn = CreateWindowA(WC_BUTTONA, "Clear&&Update", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
 	
 	//	checkboxes
-	ui->newlinecheck = CreateWindowA("BUTTON", "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, *appwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
+	ui->newlinecheck = CreateWindowA(WC_BUTTONA, "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, *appwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
 	SendMessageW(ui->newlinecheck, BM_SETCHECK, BST_CHECKED, 0);
 	
-	ui->extended = CreateWindowA("BUTTON", "AT controls", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 100, 10, 75, 16, *appwnd, (HMENU)GUI_CHK_QKAT, NULL, NULL);
-		
+	ui->extended = CreateWindowA(WC_BUTTONA, "AT controls", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 100, 10, 75, 16, *appwnd, (HMENU)GUI_CHK_QKAT, NULL, NULL);
+
 	//	AT-macro buttons
-	ui->atbtn_at = CreateWindowA("BUTTON", "AT", WS_CHILD, 10, 380, 80, 25, *appwnd, (HMENU)GUI_AT_AT, NULL, NULL);
-	ui->atbtn_id = CreateWindowA("BUTTON", "AT+ID", WS_CHILD, 95, 380, 80, 25, *appwnd, (HMENU)GUI_AT_ID, NULL, NULL);
-	ui->atbtn_ok = CreateWindowA("BUTTON", "OK", WS_CHILD, 180, 380, 80, 25, *appwnd, (HMENU)GUI_AT_OK, NULL, NULL);
-	ui->atbtn_prefix = CreateWindowA("BUTTON", "AT+", WS_CHILD, 265, 380, 80, 25, *appwnd, (HMENU)GUI_AT_PREF, NULL, NULL);
+	ui->atbtn_at = CreateWindowA(WC_BUTTONA, "AT", WS_CHILD, 10, 380, 80, 25, *appwnd, (HMENU)GUI_AT_AT, NULL, NULL);
+	ui->atbtn_id = CreateWindowA(WC_BUTTONA, "AT+ID", WS_CHILD, 95, 380, 80, 25, *appwnd, (HMENU)GUI_AT_ID, NULL, NULL);
+	ui->atbtn_ok = CreateWindowA(WC_BUTTONA, "OK", WS_CHILD, 180, 380, 80, 25, *appwnd, (HMENU)GUI_AT_OK, NULL, NULL);
+	ui->atbtn_prefix = CreateWindowA(WC_BUTTONA, "AT+", WS_CHILD, 265, 380, 80, 25, *appwnd, (HMENU)GUI_AT_PREF, NULL, NULL);
 	
 	//	set font
 	for (int i = GUI_LOGWIN; i <= GUI_AT_ID; i++)
@@ -97,54 +98,64 @@ void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 }
 
+void disconnectPort(maddsua::serial* serial, uiElements* ui, uiData* data) {
+
+	//printf("Clear focus: %i\r\n", serial->clearFocus());
+	serial->clearFocus();
+}
+
 void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 
-	auto stats = serial->stats();
-	std::vector <uint32_t> listPorts;
+	auto portsList = serial->stats();
+	std::vector <uint32_t> portsAvail;
 
-	for (auto entry : stats) {
-		if (entry.status == SPSTAT_ACTIVE || entry.status == SPSTAT_AVAILABLE) {
-			listPorts.push_back(entry.port);
-			break;
-		}
+	//printf("Entries: %i\r\n", portsList.size());
+
+	/*for (size_t i = 0; i < portsList.size(); i++) {
+		printf("COM: %i : %i\r\n", portsList[i].port, portsList[i].status);
+	}*/
+	
+
+	for (auto entry : portsList) {
+		if (entry.status == SPSTAT_ACTIVE || entry.status == SPSTAT_AVAILABLE)
+			portsAvail.push_back(entry.port);
 	}
 
-	if (listPorts != data->portIndexes) {
+	if (portsAvail != data->ports) {
 		
 		//	get item that already selected
-		if (data->sel_port < data->portIndexes.size()) {
+		if (data->sel_port < data->ports.size()) {
 
-			auto selected = data->portIndexes.at(data->sel_port);
+			auto selected = data->ports.at(data->sel_port);
 
 			//	move dropdown selection
-			data->sel_port = listPorts.size() ? listPorts.size() - 1 : 0;
-			for (size_t i = 0; i < listPorts.size(); i++) {
-				if (listPorts[i] == selected) {
+			data->sel_port = portsAvail.size() ? portsAvail.size() - 1 : 0;
+			for (size_t i = 0; i < portsAvail.size(); i++) {
+				if (portsAvail[i] == selected) {
 					data->sel_port = i;
 					break;
 				}
 			}
 		}
 
-		data->portIndexes = listPorts;
+		data->ports = portsAvail;
 
-		data->ports.clear();
-		for (auto item : data->portIndexes) {
-			data->ports.push_back("COM" + std::to_string(item));
-		}
+		std::vector <std::string> dropitems;
+		for (auto item : data->ports)
+			dropitems.push_back("COM" + std::to_string(item));
 
 		//	rerender dropdown
-		dropdown(&ui->comboport, &data->ports, data->sel_port, true);
+		dropdown(&ui->comboport, &dropitems, data->sel_port, true);
 	}
 
 	//	check if selected port is connected
-	/*if (data->sel_port < data->portIndexes.size()) {
+	if (data->sel_port < data->ports.size()) {
 
-		auto entry = serial->stats(data->portIndexes.at(data->sel_port));
+		auto entry = serial->stats(data->ports.at(data->sel_port));
 
 		if (!entry.focus) {
 			auto res = serial->setFocus(entry.port);
 		}
-	}*/
+	}
 	
 }

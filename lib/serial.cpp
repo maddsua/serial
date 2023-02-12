@@ -361,10 +361,11 @@ bool maddsua::serial::setFocus(uint32_t comport) {
 bool maddsua::serial::clearFocus() {
 
 	for (auto& entry : pool) {
-		if (entry.focus && entry.status == SPSTAT_ACTIVE) {
+		if (entry.focus) {
 			CloseHandle(entry.portHandle);
 			entry.portHandle = nullptr;
 			entry.status = SPSTAT_AVAILABLE;
+			entry.cooldown = (timeGetTime() + PORT_CD_FAST_MS);
 			return true;
 		}
 	}

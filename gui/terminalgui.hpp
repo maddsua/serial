@@ -15,7 +15,7 @@
 	#include "../lib/serial.hpp"
 
 	struct uiElements {
-		HWND terminalwindow;
+		HWND terminal;
 		HWND combospeed;
 		HWND comboport;
 		HWND commprompt;
@@ -32,8 +32,7 @@
 
 	struct uiData {
 		std::vector <std::string> speeds;
-		std::vector <std::string> ports;
-		std::vector <uint32_t> portIndexes;
+		std::vector <uint32_t> ports;
 
 		std::vector <std::string> commLog;
 		std::vector <std::string> cmdHistory;
@@ -55,6 +54,7 @@
 	void displayAboutMessage();
 	void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata);
 	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
+	void disconnectPort(maddsua::serial* serial, uiElements* ui, uiData* data);
 
 
 #endif

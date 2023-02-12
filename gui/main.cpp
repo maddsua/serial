@@ -113,8 +113,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 	static auto serial = new maddsua::serial(scanSerialPorts, false);
 
-	static char bufferIn[commsgbuff];
-	static char bufferOut[commsgbuff];
+	//static char bufferIn[commsgbuff];
+	//static char bufferOut[commsgbuff];
 	
 switch(Message) {
 		
@@ -161,21 +161,24 @@ switch(Message) {
 					
 					case GUI_COMBO_PORT: {
 						
-						//	clear
-						memset(bufferOut, 0, sizeof(bufferOut));
-						SetWindowText(ui.terminalwindow, 0);
-						
-						//	clear log
-						data.commLog.clear();
-						
-						//	select
-						data.sel_port = (int)SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
+						//	select a different port
+						size_t temp = SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
+						if (temp != data.sel_port) {
+							//	assing port
+							data.sel_port = temp;
+							//	clear log
+							data.commLog.clear();
+							//	clear terminal window
+							SetWindowText(ui.terminal, NULL);
+							//	disconnect
+							disconnectPort(serial, &ui, &data);
+						}
 													
 						break;
 					}
 
 					case GUI_COMBO_SPEED: {
-						data.sel_speed = (int)SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
+						data.sel_speed = SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
 						break;
 					}
 				}
@@ -192,18 +195,18 @@ switch(Message) {
 						
 						//	update port list
 						//scanPorts(&data.ports);
-						dropdown(&ui.comboport, &data.ports, data.sel_port, true);
+						//dropdown(&ui.comboport, &data.ports, data.sel_port, true);
 						
 						//	flush buffers
-						memset(bufferIn, 0, sizeof(bufferIn));
-						memset(bufferOut, 0, sizeof(bufferOut));
+						//memset(bufferIn, 0, sizeof(bufferIn));
+						//memset(bufferOut, 0, sizeof(bufferOut));
 						
 						//	clear log
 						data.commLog.clear();
 						
 						//	erase texts
 						SetWindowText(ui.commprompt, 0);
-						SetWindowText(ui.terminalwindow, 0);
+						SetWindowText(ui.terminal, 0);
 						
 						//	reconnect
 						//memset(porttemp, 0, sizeof(porttemp));
@@ -253,16 +256,16 @@ switch(Message) {
 								strcat(userCommand, "\n");
 								
 								//	add port info
-								char logtmp[comlogbuff];
-								metalog(userCommand, data.ports[data.sel_port].c_str(), logtmp, true);
+								//char logtmp[comlogbuff];
+								//metalog(userCommand, data.ports[data.sel_port].c_str(), logtmp, true);
 								
 								//	display and write log
-								log(ui.terminalwindow, logtmp);
-								data.commLog.push_back(logtmp);
+								//log(ui.terminalwindow, logtmp);
+								//data.commLog.push_back(logtmp);
 							}
 							
 							//	copy command to output buffer
-							strcpy(bufferOut, userCommand);
+							//strcpy(bufferOut, userCommand);
 							
 							//	clear command prompt
 							SetWindowText(ui.commprompt, 0);
@@ -288,17 +291,17 @@ switch(Message) {
 					}
 					case GUI_AT_AT:{
 						
-						quickcmd(ui.terminalwindow, "AT\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
+						//quickcmd(ui.terminalwindow, "AT\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}	
 					case GUI_AT_OK:{
 
-						quickcmd(ui.terminalwindow, "OK\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
+						//quickcmd(ui.terminalwindow, "OK\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}
 					case GUI_AT_ID:{
 
-						quickcmd(ui.terminalwindow, "AT+ID\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
+						//quickcmd(ui.terminalwindow, "AT+ID\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
 						break;
 					}
 					
@@ -443,9 +446,13 @@ switch(Message) {
 		break;
 	}
 	
-	case WM_DESTROY: 
+	case WM_DESTROY: {
+		
+		delete serial;
 		PostQuitMessage(0);
-	break;
+
+		break;
+	}
 	
 	
 	default:
