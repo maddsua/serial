@@ -2,6 +2,8 @@
 #include "rescodes.hpp"
 #include "app.hpp"
 
+#include <fstream>
+
 void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	//	drop lists
 	ui->comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
@@ -61,4 +63,38 @@ void displayAboutMessage() {
 		VER_AUTHSTAMP + "\n" + APP_COPYRIGHT;
 		
 	MessageBoxA(NULL, msg.c_str(), "About...", 0);
+}
+
+void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata) {
+
+	OPENFILENAMEA ofn;
+	memset(&ofn, 0, sizeof(ofn));
+
+	char fpath[MAX_PATH];
+	memset(fpath, 0, sizeof(fpath));
+		
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = *appwnd;
+	ofn.lpstrFilter = "Log Files (*.log)\0*.log\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+	ofn.lpstrFile = fpath;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrDefExt = "txt";
+
+	ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+
+	if (!GetSaveFileNameA(&ofn)) return;
+
+	std::ofstream localFile(ofn.lpstrFile, std::ios::out);
+
+	if (!localFile.is_open()) {
+		MessageBoxA(*appwnd, "Save file failed.", "Error", MB_OK | MB_ICONEXCLAMATION);
+		return;
+	}
+
+	for (auto record : *logdata) {
+		localFile << record;
+	}
+	
+	localFile.close();
+	
 }
