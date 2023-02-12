@@ -18,7 +18,7 @@
 #include "app.hpp"
 #include "terminalgui.hpp"
 
-const std::vector <int> serialSpeeds = {
+const std::vector <uint32_t> serialSpeeds = {
 	110, 300, 600, 1200, 2400, 4800, 9600,
 	14400, 19200, 38400, 56000, 57600,
 	115200, 128000, 256000
@@ -115,8 +115,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 	static char bufferIn[commsgbuff];
 	static char bufferOut[commsgbuff];
-
-	//static char porttemp[125];
 	
 switch(Message) {
 		
@@ -445,16 +443,10 @@ switch(Message) {
 		break;
 	}
 	
-	case WM_DESTROY: {
-		
-		//	close io thread
-		//data.commstat = 1;
-		//worker.join();
-				
-		//	exit
+	case WM_DESTROY: 
 		PostQuitMessage(0);
-		break;
-	}
+	break;
+	
 	
 	default:
 		return DefWindowProc(hwnd, Message, wParam, lParam);

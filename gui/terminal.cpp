@@ -134,7 +134,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 		auto entry = serial->stats(data->portIndexes.at(data->sel_port));
 
 		if (!entry.focus) {
-			auto res = serial->setFocus(entry.comport);
+			auto res = serial->setFocus(entry.port);
 		}
 	}
 	

@@ -33,7 +33,7 @@
 	struct uiData {
 		std::vector <std::string> speeds;
 		std::vector <std::string> ports;
-		std::vector <int> portIndexes;
+		std::vector <uint32_t> portIndexes;
 
 		std::vector <std::string> commLog;
 		std::vector <std::string> cmdHistory;

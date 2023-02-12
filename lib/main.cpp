@@ -13,23 +13,27 @@ int main() {
 
 	while (true) {
 
-		auto incoming = com->dataAvail();
+		auto incoming = com->stats();
 
 		for (auto idx : incoming) {
-		
-			auto msg = com->read(idx);
-			std::cout << msg << std::endl;
 
-			if (msg.find("Hello") != std::string::npos) helloCount++;
+			if (idx.dataAvailable) {
 
-			if (helloCount > 2) {
+				auto msg = com->read(idx.port);
+				std::cout << msg << std::endl;
 
-				helloCount = 0;
-				com->write(idx, "ping\r\n");
-				
-				auto stats = com->stats(idx);
-				std::cout << "Data transfered: " << (stats.transferTX + stats.transferRX) << std::endl;
+				if (msg.find("Hello") != std::string::npos) helloCount++;
+
+				if (helloCount > 2) {
+
+					helloCount = 0;
+					com->write(idx.port, "ping\r\n");
+					
+					auto stats = com->stats(idx.port);
+					std::cout << "Data transfered: " << (stats.transferTX + stats.transferRX) << std::endl;
+				}
 			}
+		
 		}
 		Sleep(1000);
 	}

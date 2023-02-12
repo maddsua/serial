@@ -19,14 +19,14 @@
 
 #define WINERR_DEV_NOTFOUND	(433)
 
-#define SPSTAT_DISABLED	(5)
-#define SPSTAT_IGNORED	(4)
-#define SPSTAT_BUSY		(3)
+#define SPSTAT_DISABLED		(5)
+#define SPSTAT_IGNORED		(4)
+#define SPSTAT_BUSY			(3)
 #define SPSTAT_ACTIVE		(2)
 #define SPSTAT_AVAILABLE	(1)
-#define SPSTAT_DISCONN	(0)
-#define SPSTAT_IOERROR	(-1)
-#define SPSTAT_SETPERR	(-2)
+#define SPSTAT_DISCONN		(0)
+#define SPSTAT_IOERROR		(-1)
+#define SPSTAT_SETPERR		(-2)
 
 namespace maddsua {
 
@@ -34,15 +34,16 @@ namespace maddsua {
 
 		public:
 			struct portEntry {
-				bool excluded = false;
-				bool focus = false;
-				int portIndex = 0;
-				int status = SPSTAT_DISCONN;
+				int32_t port = 0;
+				int32_t status = SPSTAT_DISCONN;
 
-				time_t cooldown = 0;
-				time_t linePending = 0;
 				size_t transferTX = 0;
 				size_t transferRX = 0;
+				time_t cooldown = 0;
+				time_t linePending = 0;
+
+				bool excluded = false;
+				bool focus = false;
 
 				HANDLE portHandle = nullptr;
 
@@ -52,65 +53,37 @@ namespace maddsua {
 				std::string deviceID;
 			};
 
-			struct readablePortEntry {
+			struct portEntryInfo {
+				uint32_t port = 0;
+				int32_t status = SPSTAT_DISCONN;
+
 				size_t transferTX = 0;
 				size_t transferRX = 0;
 				size_t dataAvailable = 0;
-				uint32_t comport = 0;
+
 				bool excluded = false;
 				bool cooldown = false;
 				bool focus = false;
-				std::string status;
+
 				std::string id;
 			};
 
-			struct portAttribs {
-				bool enabled = true;
-				bool ignored = false;
-			};
+			serial(uint32_t maxPorts, bool parallel);
+			~serial();
 
-			serial(int maxPorts, bool parallel) {
-				running = true;
-				textmode = true;
-				parallelOps = parallel;
-				serialSpeed = 9600;
-				activatePorts = (maxPorts < PORTS_COMSMAX) ? maxPorts : PORTS_COMSMAX;
-
-				//	create port port entries
-				for (size_t i = PORT_FIRST; i < activatePorts; i++) {
-					portEntry temp;
-						temp.portIndex = i;
-					pool.push_back(std::move(temp));
-				}
-
-				daemon = std::thread(ioloop, this);
-			}
-			~serial() {
-				running = false;
-				if (daemon.joinable()) daemon.join();
-			}
-
+			std::vector <uint32_t> getSpeeds();
 			bool setSpeed(uint32_t baudrate);
-			std::vector <int> getSpeeds();
 
-			std::vector <int> dataAvail();
-
-			std::vector <readablePortEntry> stats();
-			readablePortEntry stats(uint32_t comport);
-			std::vector <int> portsActive();
-			std::vector <int> portsFree();
-			std::vector <int> portsAvailable();
-
-			bool setPortState(uint32_t comport, portAttribs attribs);
+			std::vector <portEntryInfo> stats();
+			portEntryInfo stats(uint32_t comport);
 
 			bool write(uint32_t comport, std::string data);
+			bool write(portEntry& entry, std::string data);
 			std::string read(uint32_t comport);
+			std::string read(portEntry& entry);
 
 			bool setFocus(uint32_t comport);
 			bool clearFocus();
-
-			bool write(std::string data);
-			std::string read();
 
 		private:
 			int serialSpeed;
@@ -121,7 +94,7 @@ namespace maddsua {
 			void ioloop();
 			std::thread daemon;
 			std::vector <portEntry> pool;
-			readablePortEntry stats(portEntry& entry);
+			portEntryInfo stats(portEntry& entry);
 	};
 
 }
