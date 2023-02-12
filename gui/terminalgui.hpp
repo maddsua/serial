@@ -31,10 +31,10 @@
 	};
 
 	struct uiData {
-		std::vector <std::string> speeds;
+		std::vector <uint32_t> speeds;
 		std::vector <uint32_t> ports;
 
-		std::vector <std::string> commLog;
+		std::vector <std::string> log;
 		std::vector <std::string> cmdHistory;
 
 		std::string buffIn;
@@ -54,7 +54,7 @@
 	void displayAboutMessage();
 	void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata);
 	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
-	void disconnectPort(maddsua::serial* serial, uiElements* ui, uiData* data);
+	void resetComms(maddsua::serial* serial, uiElements* ui, uiData* data);
 
 
 #endif

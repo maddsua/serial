@@ -17,7 +17,6 @@
 #define PORTS_COMSMAX		(256)
 #define PORT_FIRST			(1)
 #define PORT_COOLDOWN_MS	(3000)
-#define PORT_CD_FAST_MS		(1000)
 #define PORT_TEXT_WAIT		(300)
 #define PORT_CHUNK			(64)
 

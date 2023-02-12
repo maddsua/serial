@@ -7,9 +7,29 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 
 	//	drop lists
 	ui->comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-		
+
+	//	serial speeds dropdown
+	//	it isn't gonna be updated coz speeds are hardcoded to the library
+	//	so render it only once and then just use as intended
 	ui->combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
-	dropdown(&ui->combospeed, &data->speeds, data->sel_speed, false);
+	{
+		std::vector <std::string> temp;
+
+		for (auto item : data->speeds) {
+			temp.push_back(std::to_string(item) + " baud");
+		}
+
+		//	select 9600, bc it's the default
+		for (size_t i = 1; i < data->speeds.size(); i++) {
+			if (data->speeds.at(i) == SIO_DEFAULT_SPEED) {
+				data->sel_speed = i;
+				break;
+			}
+		}
+
+		dropdown(&ui->combospeed, &temp, data->sel_speed, false);
+	}
+		
 	
 	//	log
 	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
@@ -20,7 +40,7 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	//	buttons
 	ui->senditbtn = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
 	
-	ui->clearbtn = CreateWindowA(WC_BUTTONA, "Clear&&Update", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
+	ui->clearbtn = CreateWindowA(WC_BUTTONA, "Reset", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
 	
 	//	checkboxes
 	ui->newlinecheck = CreateWindowA(WC_BUTTONA, "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, *appwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
@@ -98,9 +118,12 @@ void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 }
 
-void disconnectPort(maddsua::serial* serial, uiElements* ui, uiData* data) {
-
-	//printf("Clear focus: %i\r\n", serial->clearFocus());
+void resetComms(maddsua::serial* serial, uiElements* ui, uiData* data) {
+	//	clear log
+	data->log.clear();
+	//	clear terminal window
+	SetWindowText(ui->terminal, NULL);
+	//	reset connected ports
 	serial->clearFocus();
 }
 
@@ -154,7 +177,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 		auto entry = serial->stats(data->ports.at(data->sel_port));
 
 		if (!entry.focus) {
-			printf("entry: %i\r\n", entry.port);
+			//printf("entry: %i\r\n", entry.port);
 			auto res = serial->setFocus(entry.port);
 		}
 	}

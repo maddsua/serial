@@ -175,7 +175,7 @@ void maddsua::serial::ioloop() {
 				portShutdown(entry.portHandle);
 
 				entry.status = SPSTAT_AVAILABLE;
-				entry.cooldown = (systime + PORT_CD_FAST_MS);
+				entry.cooldown = (systime + PORT_COOLDOWN_MS);
 				continue;
 			}
 
@@ -271,6 +271,7 @@ std::string maddsua::serial::read(uint32_t comport) {
 
 	for (auto& entry : pool) {
 		if ((entry.port == comport && entry.status == SPSTAT_ACTIVE) || (entry.focus && entry.status == SPSTAT_ACTIVE)) {
+			if (!entry.buffRX.size()) return {};
 			auto temp = entry.buffRX;
 			entry.buffRX.clear();
 			return temp;
@@ -282,6 +283,7 @@ std::string maddsua::serial::read(uint32_t comport) {
 std::string maddsua::serial::read(portEntry& entry) {
 
 	if (entry.status == SPSTAT_ACTIVE) {
+		if (!entry.buffRX.size()) return {};
 		auto temp = entry.buffRX;
 		entry.buffRX.clear();
 		return temp;
@@ -331,7 +333,7 @@ std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
 
 	for (auto& entry : pool) {
 		result.push_back(stats(entry));
-		printf("COM%i:%i:%i\r\n", entry.port, entry.portHandle, entry.focus);
+		//printf("COM%i:%i:%i\r\n", entry.port, entry.portHandle, entry.focus);
 	}
 
 	return result;
@@ -367,7 +369,7 @@ bool maddsua::serial::clearFocus() {
 			portShutdown(entry.portHandle);
 			entry.focus = false;
 			entry.status = SPSTAT_AVAILABLE;
-			entry.cooldown = (timeGetTime() + PORT_CD_FAST_MS);
+			entry.cooldown = (timeGetTime() + PORT_COOLDOWN_MS);
 			return true;
 		}
 	}
