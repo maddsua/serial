@@ -18,7 +18,7 @@
 #include "app.hpp"
 #include "terminalgui.hpp"
 
-std::vector <int> serialSpeeds = {
+const std::vector <int> serialSpeeds = {
 	110, 300, 600, 1200, 2400, 4800, 9600,
 	14400, 19200, 38400, 56000, 57600,
 	115200, 128000, 256000
@@ -55,9 +55,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int winPosx = (GetSystemMetrics(SM_CXSCREEN) / 2) - (windowSizeX);
     int winPosy = (GetSystemMetrics(SM_CYSCREEN) / 2) - (windowSizeY / 1.2);
 
-	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "*windowClass", APP_NAME, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-		winPosx, winPosy, windowSizeX, windowSizeY,
-		NULL, NULL, hInstance, NULL);
+	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "*windowClass", APP_NAME, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, winPosx, winPosy, windowSizeX, windowSizeY, NULL, NULL, hInstance, NULL);
 
 	if (!hwnd) {
 		MessageBoxA(NULL, "Window Creation Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
@@ -67,9 +65,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	while (GetMessage(&msg, NULL, 0, 0) > 0) {
 	
 		// skip msg translation to prevent sound	
-		if (/*msg.message == WM_KEYDOWN &&*/ msg.wParam != VK_RETURN) {
+		if (msg.wParam != VK_RETURN)
 			TranslateMessage(&msg);
-		}
 
 		DispatchMessage(&msg);
 	}
@@ -166,12 +163,6 @@ switch(Message) {
 					
 					case GUI_COMBO_PORT: {
 						
-						//	disconnect
-						if (!data.commstat) {
-							data.commstat = 1;
-							//worker.join();
-						}
-						
 						//	clear
 						memset(bufferOut, 0, sizeof(bufferOut));
 						SetWindowText(ui.terminalwindow, 0);
@@ -183,7 +174,6 @@ switch(Message) {
 						data.sel_port = (int)SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
 						
 						//	reconnect
-						data.commstat = 0;
 						//memset(porttemp, 0, sizeof(porttemp));
 						//memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
 						//worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
@@ -205,15 +195,10 @@ switch(Message) {
 					//	clear button
 					case GUI_BTN_CLR: {
 						
-						//	disconnect
-						if (!data.commstat) {
-							data.commstat = 1;
-							//worker.join();
-						}
 						
 						//	update port list
 						//scanPorts(&data.ports);
-						dropdown(ui.comboport, &data.ports, data.sel_port, true);
+						dropdown(&ui.comboport, &data.ports, data.sel_port, true);
 						
 						//	flush buffers
 						memset(bufferIn, 0, sizeof(bufferIn));
@@ -227,7 +212,6 @@ switch(Message) {
 						SetWindowText(ui.terminalwindow, 0);
 						
 						//	reconnect
-						data.commstat = 0;
 						//memset(porttemp, 0, sizeof(porttemp));
 						//memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
 						//worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
@@ -365,7 +349,6 @@ switch(Message) {
 					
 					
 					case CM_FILE_EXIT: 
-						data.commstat = 1;
 						PostMessage(hwnd, WM_CLOSE, 0, 0);
 					break;
 					
@@ -425,7 +408,7 @@ switch(Message) {
 
 		if (wParam == CYCLE_PRINT) {
 
-			if (!data.commstat && strlen(bufferIn) > 0) {
+			if (!/*data.commstat &&*/ strlen(bufferIn) > 0) {
 				
 				char logtmp[comlogbuff];
 				
@@ -438,7 +421,7 @@ switch(Message) {
 				memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
 			}
 
-			switch (data.commstat) {
+			/*switch (data.commstat) {
 				case 2:
 					log(ui.terminalwindow, "___ Port is not connected ___\n");
 				break;
@@ -457,24 +440,11 @@ switch(Message) {
 			
 				default:
 				break;
-			}
+			}*/
 
-			data.commstat = 0;
+			//data.commstat = 0;
 
-		} else if (wParam == TIMER_PORTSLIST) {
-
-			auto temp = serial->portsFree();
-
-			if (temp != data.portIndexes) {
-				data.portIndexes = temp;
-
-				data.ports.clear();
-				for (auto item : temp) {
-					data.ports.push_back("COM" + std::to_string(item));
-				}
-				dropdown(ui.comboport, &data.ports, 0, true);
-			}
-		}
+		} else if (wParam == TIMER_PORTSLIST) updateComPorts(serial, &ui, &data);
 
 		break;
 	}
@@ -482,7 +452,7 @@ switch(Message) {
 	case WM_DESTROY: {
 		
 		//	close io thread
-		data.commstat = 1;
+		//data.commstat = 1;
 		//worker.join();
 				
 		//	exit

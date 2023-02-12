@@ -7,6 +7,12 @@
 
 	#include <vector>
 	#include <string>
+	#include <algorithm>
+
+	#include "rescodes.hpp"
+	#include "app.hpp"
+
+	#include "../lib/serial.hpp"
 
 	struct uiElements {
 		HWND terminalwindow;
@@ -35,10 +41,8 @@
 		std::string buffIn;
 		std::string buffOut;
 
-		int commstat = 0;
-
-		int sel_speed = 0;
-		int sel_port = 0;
+		size_t sel_speed = 0;
+		size_t sel_port = 0;
 		size_t historyItem = 0;
 
 		bool viewHistory = false;
@@ -47,9 +51,10 @@
 	};
 
 	void uiInit(HWND* appwnd, uiElements* ui, uiData* data);
-	void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);
+	void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase);
 	void displayAboutMessage();
 	void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata);
+	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
 
 
 #endif

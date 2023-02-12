@@ -13,7 +13,7 @@
 	#include "rescodes.hpp"
 
 	#define APP_NAME		"Serial Terminal"
-	#define APP_VERSION		"2.0.1"
+	#define APP_VERSION		"4.0.0"
 	#define APP_DESC		"A serial port communication utility"
 	#define VER_AUTHSTAMP	"2023 maddsua"
 	#define APP_COPYRIGHT	"https://github.com/maddsua"
@@ -51,7 +51,7 @@
 	void quickcmd(HWND term, const char* cmd, bool usenl,  const char* port, std::vector <std::string>* datalog, char* comm);
 	void metalog(const char* input, const char* port, char* result, bool isInput);
 	//void dropdown(HWND combo, char** items, unsigned int length, unsigned int focus, bool erase);
-	void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);
+	//void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);
 	
 	bool SaveLogFile(std::vector <std::string>* commlog, char* filepath);
 	

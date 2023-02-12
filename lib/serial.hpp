@@ -19,14 +19,14 @@
 
 #define WINERR_DEV_NOTFOUND	(433)
 
-#define PORTSTAT_DISABLED	(5)
-#define PORTSTAT_IGNORED	(4)
-#define PORTSTAT_BUSY		(3)
-#define PORTSTAT_ACTIVE		(2)
-#define PORTSTAT_AVAILABLE	(1)
-#define PORTSTAT_DISCONN	(0)
-#define PORTSTAT_IOERROR	(-1)
-#define PORTSTAT_SETPERR	(-2)
+#define SPSTAT_DISABLED	(5)
+#define SPSTAT_IGNORED	(4)
+#define SPSTAT_BUSY		(3)
+#define SPSTAT_ACTIVE		(2)
+#define SPSTAT_AVAILABLE	(1)
+#define SPSTAT_DISCONN	(0)
+#define SPSTAT_IOERROR	(-1)
+#define SPSTAT_SETPERR	(-2)
 
 namespace maddsua {
 
@@ -34,10 +34,10 @@ namespace maddsua {
 
 		public:
 			struct portEntry {
-				bool active = false;
 				bool excluded = false;
+				bool focus = false;
 				int portIndex = 0;
-				int16_t status = PORTSTAT_DISCONN;
+				int status = SPSTAT_DISCONN;
 
 				time_t cooldown = 0;
 				time_t linePending = 0;
@@ -72,7 +72,6 @@ namespace maddsua {
 				running = true;
 				textmode = true;
 				parallelOps = parallel;
-				portFocus = -1;
 				serialSpeed = 9600;
 				activatePorts = (maxPorts < PORTS_COMSMAX) ? maxPorts : PORTS_COMSMAX;
 
@@ -90,23 +89,24 @@ namespace maddsua {
 				if (daemon.joinable()) daemon.join();
 			}
 
-			bool setSpeed(int baudrate);
+			bool setSpeed(uint32_t baudrate);
 			std::vector <int> getSpeeds();
 
 			std::vector <int> dataAvail();
 
 			std::vector <readablePortEntry> stats();
-			readablePortEntry stats(int comport);
+			readablePortEntry stats(uint32_t comport);
 			std::vector <int> portsActive();
 			std::vector <int> portsFree();
+			std::vector <int> portsAvailable();
 
-			bool setPortState(int comport, portAttribs attribs);
+			bool setPortState(uint32_t comport, portAttribs attribs);
 
-			bool write(int comport, std::string data);
-			std::string read(int comport);
+			bool write(uint32_t comport, std::string data);
+			std::string read(uint32_t comport);
 
-			bool setFocus(int comport);
-			void clearFocus();
+			bool setFocus(uint32_t comport);
+			bool clearFocus();
 
 			bool write(std::string data);
 			std::string read();
@@ -114,7 +114,6 @@ namespace maddsua {
 		private:
 			int serialSpeed;
 			int activatePorts;
-			int portFocus;
 			bool textmode;
 			bool parallelOps;
 			bool running;

@@ -1,16 +1,14 @@
 #include "terminalgui.hpp"
-#include "rescodes.hpp"
-#include "app.hpp"
 
 #include <fstream>
 
 void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	//	drop lists
 	ui->comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-	dropdown(ui->comboport, &data->ports, data->sel_port, true);
+	dropdown(&ui->comboport, &data->ports, data->sel_port, true);
 		
 	ui->combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
-	dropdown(ui->combospeed, &data->speeds, data->sel_speed, false);
+	dropdown(&ui->combospeed, &data->speeds, data->sel_speed, false);
 	
 	//	log
 	ui->terminalwindow = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
@@ -40,20 +38,20 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(TRUE,0));
 }
 
-void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase) {
+void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase) {
 	
 	if (erase) {
-		size_t contlen = SendMessage(combo, CB_GETCOUNT, 0, 0);
+		size_t contlen = SendMessage(*combo, CB_GETCOUNT, 0, 0);
 		for (size_t i = 0; i < contlen; i++)
-			SendMessage(combo, CB_DELETESTRING, 0, 0);
+			SendMessage(*combo, CB_DELETESTRING, 0, 0);
 	}
 	
 	for (int i = 0; i < items->size(); i++) {
 		std::string temp = items->at(i);
-		SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)temp.c_str());
+		SendMessage(*combo, CB_ADDSTRING, 0, (LPARAM)temp.c_str());
 	}
 
-	SendMessage(combo, CB_SETCURSEL , focus, 0);
+	SendMessage(*combo, CB_SETCURSEL , focus, 0);
 }
 
 void displayAboutMessage() {
@@ -96,5 +94,46 @@ void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata) {
 	}
 	
 	localFile.close();
+
+}
+
+void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
+
+	auto temp = serial->portsFree();
+	if (temp != data->portIndexes) {
+		
+		//	get item that already selected
+		if (data->sel_port < data->portIndexes.size()) {
+
+			auto selected = data->portIndexes.at(data->sel_port);
+
+			//	move dropdown selection
+			data->sel_port = temp.size() ? temp.size() - 1 : 0;
+			for (size_t i = 0; i < temp.size(); i++) {
+				if (temp[i] == selected) {
+					data->sel_port = i;
+					break;
+				}
+			}
+		}
+
+		data->portIndexes = temp;
+
+		data->ports.clear();
+		for (auto item : data->portIndexes) {
+			data->ports.push_back("COM" + std::to_string(item));
+		}
+
+		//	rerender dropdown
+		dropdown(&ui->comboport, &data->ports, data->sel_port, true);
+	}
+
+	//	check if selected port is connected
+	if (data->sel_port < data->portIndexes.size()) {
+		auto selected = data->portIndexes.at(data->sel_port);
+		auto entry = serial->stats(data->portIndexes.at(data->sel_port));
+
+		//if (!entry.f)
+	}
 	
 }

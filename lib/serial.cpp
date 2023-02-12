@@ -11,7 +11,7 @@ std::vector <int> maddsua::serial::getSpeeds() {
 	return std::vector <int> (comSpeeds.begin(), comSpeeds.end());
 };
 
-bool maddsua::serial::setSpeed(int baudrate) {
+bool maddsua::serial::setSpeed(uint32_t baudrate) {
 
 	for (auto speed : comSpeeds) {
 		if (baudrate == speed) {
@@ -47,13 +47,25 @@ void maddsua::serial::ioloop() {
 			}
 
 			//	try to establish a connection or perform cleanup
-			if (!entry.active && entry.cooldown < systime) {
+			if (entry.status != SPSTAT_ACTIVE && entry.cooldown < systime) {
 				memset(openPath, 0, 16);
 				snprintf(openPath, 15, "\\\\.\\COM%i", entry.portIndex);
 				entry.portHandle = CreateFileA(openPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
 				//	if disconnected or error, do cleanup
 				if (entry.portHandle == INVALID_HANDLE_VALUE) {
+
+					auto errcode = GetLastError();
+					if (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) {
+						//	port is clear
+						entry.cooldown = 0;
+						entry.status = SPSTAT_DISCONN;
+
+					} else {
+						//	wait for now + PORT_COOLDOWN_MS seconds until next try
+						entry.cooldown = (systime + PORT_COOLDOWN_MS);
+						entry.status = SPSTAT_BUSY;
+					}
 
 					entry.linePending = 0;
 					entry.transferRX = 0;
@@ -63,25 +75,13 @@ void maddsua::serial::ioloop() {
 					entry.buffTX.clear();
 					entry.deviceID.clear();
 
-					auto errcode = GetLastError();
-					if (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) {
-						//	port is clear
-						entry.cooldown = 0;
-						entry.status = PORTSTAT_DISCONN;
-
-					} else {
-						//	wait for now + PORT_COOLDOWN_MS seconds until next try
-						entry.cooldown = (systime + PORT_COOLDOWN_MS);
-						entry.status = PORTSTAT_BUSY;
-					}
-
 				} else if (!parallelOps) {
 					CloseHandle(entry.portHandle);
-					entry.status = PORTSTAT_AVAILABLE;
+					entry.status = SPSTAT_AVAILABLE;
 					entry.cooldown = (systime + PORT_CD_FAST_MS);
 				}
 
-				if (!parallelOps) continue;
+				if (!parallelOps && !entry.focus) continue;
 
 				//	perform setup
 				{
@@ -92,7 +92,7 @@ void maddsua::serial::ioloop() {
 					if (!SetCommTimeouts(entry.portHandle, &timeouts)){
 						CloseHandle(entry.portHandle);
 						entry.portHandle = nullptr;
-						entry.status = PORTSTAT_SETPERR;
+						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
 						continue;
 					}
@@ -101,7 +101,7 @@ void maddsua::serial::ioloop() {
 					if (!GetCommState(entry.portHandle, &settings)) {
 						CloseHandle(entry.portHandle);
 						entry.portHandle = nullptr;
-						entry.status = PORTSTAT_SETPERR;
+						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
 						continue;
 					}
@@ -114,14 +114,13 @@ void maddsua::serial::ioloop() {
 					if (!SetCommState(entry.portHandle, &settings)){
 						CloseHandle(entry.portHandle);
 						entry.portHandle = nullptr;
-						entry.status = PORTSTAT_SETPERR;
+						entry.status = SPSTAT_SETPERR;
 						entry.cooldown = (systime + PORT_COOLDOWN_MS);
 						continue;
 					}
 
 					//	setup complete
-					entry.status = PORTSTAT_ACTIVE;
-					entry.active = true;
+					entry.status = SPSTAT_ACTIVE;
 				}
 
 				//	skip this cycle
@@ -130,7 +129,7 @@ void maddsua::serial::ioloop() {
 			}
 
 			//	IO operations
-			if (!entry.active) continue;
+			if (entry.status != SPSTAT_ACTIVE) continue;
 
 			//	send data
 			if (entry.buffTX.size()) {
@@ -138,9 +137,8 @@ void maddsua::serial::ioloop() {
 				if (!WriteFile(entry.portHandle, entry.buffTX.data(), entry.buffTX.size(), NULL, NULL)){
 					CloseHandle(entry.portHandle);
 					entry.portHandle = nullptr;
-					entry.status = PORTSTAT_IOERROR;
+					entry.status = SPSTAT_IOERROR;
 					entry.cooldown = (systime + PORT_COOLDOWN_MS);
-					entry.active = false;
 					continue;
 				}
 				entry.transferTX += entry.buffTX.size();
@@ -151,9 +149,8 @@ void maddsua::serial::ioloop() {
 			if (!ReadFile(entry.portHandle, &rxTemp, PORT_CHUNK, &rxBytesRead, NULL)){
 				CloseHandle(entry.portHandle);
 				entry.portHandle = nullptr;
-				entry.status = PORTSTAT_IOERROR;
+				entry.status = SPSTAT_IOERROR;
 				entry.cooldown = (systime + PORT_COOLDOWN_MS);
-				entry.active = false;
 				continue;
 			}
 
@@ -191,22 +188,22 @@ void maddsua::serial::ioloop() {
 }
 
 
-bool maddsua::serial::write(int comport, std::string data) {
+bool maddsua::serial::write(uint32_t comport, std::string data) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return false;
 	
 	auto& entry = pool[comport];
-	if (!entry.active) return false;
+	if (entry.status != SPSTAT_ACTIVE) return false;
 
 	entry.buffTX += data;
 	return true;
 }
-std::string maddsua::serial::read(int comport) {
+std::string maddsua::serial::read(uint32_t comport) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return {};
 
 	auto& entry = pool[comport];
-	if (!entry.active) return {};
+	if (entry.status != SPSTAT_ACTIVE) return {};
 
 	auto temp = entry.buffRX;
 	entry.buffRX.clear();
@@ -216,27 +213,29 @@ std::string maddsua::serial::read(int comport) {
 
 std::string maddsua::serial::read() {
 
-	if (portFocus < 0) return {};
+	for (auto& entry : pool) {
+		if (entry.focus && entry.status == SPSTAT_ACTIVE) {
+			auto temp = entry.buffRX;
+			entry.buffRX.clear();
+			return temp;
+		}
+	}
 
-	auto& entry = pool[portFocus];
-	if (!entry.active) return {};
-
-	auto temp = entry.buffRX;
-	entry.buffRX.clear();
-
-	return temp;
+	return {};
 }
 bool maddsua::serial::write(std::string data) {
-	if (portFocus < 0) return {};
 
-	auto& entry = pool[portFocus];
-	if (!entry.active) return false;
-
-	entry.buffTX += data;
+	for (auto& entry : pool) {
+		if (entry.focus && entry.status == SPSTAT_ACTIVE) {
+			entry.buffTX += data;
+			return true;
+		}
+	}
+	
 	return true;
 }
 
-maddsua::serial::readablePortEntry maddsua::serial::stats(int comport) {
+maddsua::serial::readablePortEntry maddsua::serial::stats(uint32_t comport) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return {};
 
@@ -256,23 +255,23 @@ maddsua::serial::readablePortEntry maddsua::serial::stats(portEntry& entry) {
 		temp.transferTX = entry.transferTX;
 
 	switch (entry.status) {
-		case PORTSTAT_AVAILABLE:
+		case SPSTAT_AVAILABLE:
 			temp.status = "available";
 		break;
 
-		case PORTSTAT_BUSY:
+		case SPSTAT_BUSY:
 			temp.status = "busy";
 		break;
 
-		case PORTSTAT_ACTIVE:
+		case SPSTAT_ACTIVE:
 			temp.status = "active";
 		break;
 
-		case PORTSTAT_IOERROR:
+		case SPSTAT_IOERROR:
 			temp.status = "io error";
 		break;
 
-		case PORTSTAT_SETPERR:
+		case SPSTAT_SETPERR:
 			temp.status = "setup error";
 		break;
 	
@@ -299,7 +298,7 @@ std::vector <int> maddsua::serial::portsActive() {
 	std::vector <int> result;
 
 	for (auto entry : pool) {
-		if (entry.active) result.push_back(entry.portIndex);
+		if (entry.status == SPSTAT_ACTIVE) result.push_back(entry.portIndex);
 	}
 
 	return result;
@@ -310,9 +309,21 @@ std::vector <int> maddsua::serial::portsFree() {
 	std::vector <int> result;
 
 	for (auto entry : pool) {
-		if (entry.status == (parallelOps ? PORTSTAT_DISCONN : PORTSTAT_AVAILABLE)) result.push_back(entry.portIndex);
+		if (entry.status == (parallelOps ? SPSTAT_DISCONN : SPSTAT_AVAILABLE)) result.push_back(entry.portIndex);
 	}
 
+	return result;
+}
+
+std::vector <int> maddsua::serial::portsAvailable() {
+
+	std::vector <int> result;
+
+	for (auto entry : pool) {
+		if ((parallelOps && entry.status == SPSTAT_ACTIVE) || (!parallelOps && (entry.status == SPSTAT_ACTIVE || entry.status == SPSTAT_AVAILABLE)))
+			result.push_back(entry.portIndex);
+	}
+	
 	return result;
 }
 
@@ -328,7 +339,7 @@ std::vector <int> maddsua::serial::dataAvail() {
 	return result;
 }
 
-bool maddsua::serial::setPortState(int comport, maddsua::serial::portAttribs attribs) {
+bool maddsua::serial::setPortState(uint32_t comport, maddsua::serial::portAttribs attribs) {
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return {};
 	
@@ -339,16 +350,27 @@ bool maddsua::serial::setPortState(int comport, maddsua::serial::portAttribs att
 	return true;
 }
 
-bool maddsua::serial::setFocus(int comport) {
+bool maddsua::serial::setFocus(uint32_t comport) {
 
 	comport -= PORT_FIRST;
 	if (comport >= pool.size()) return false;
 
-	portFocus = comport;
+	auto& entry = pool[comport];
+	entry.focus = true;
 
 	return true;
 }
 
-void maddsua::serial::clearFocus() {
-	portFocus = 0;
+bool maddsua::serial::clearFocus() {
+
+	for (auto& entry : pool) {
+		if (entry.focus && entry.status == SPSTAT_ACTIVE) {
+			CloseHandle(entry.portHandle);
+			entry.portHandle = nullptr;
+			entry.status = SPSTAT_AVAILABLE;
+			return true;
+		}
+	}
+
+	return false;
 }
