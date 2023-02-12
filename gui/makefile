@@ -1,9 +1,10 @@
 
 APP        = SerialTerminal.exe
 OBJECTS    = app.res appops.o terminal.o ../lib/serial.o
-FLAGS      = -std=c++20 -mwindows -g
+FLAGS      = -std=c++20 -g
 LIBS       = -lgdi32 -lcomdlg32 -lwinmm
 # -L"../lib" -lserialapi
+#-mwindows
 
 .PHONY: all all-before all-after clean-custom run-custom lib demo
 all: all-before $(APP) all-after
