@@ -6,7 +6,7 @@
 
 int main() {
 
-	auto com = new maddsua::serial(8);
+	auto com = new maddsua::serial(8, false);
 	com->setSpeed(9600);
 
 	int helloCount = 0;

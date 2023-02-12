@@ -33,7 +33,7 @@ void maddsua::serial::ioloop() {
 
 	while (running) {
 
-		systime = time(nullptr);
+		systime = timeGetTime();
 		requests = 0;
 
 		for (auto& entry : pool) {
@@ -58,7 +58,6 @@ void maddsua::serial::ioloop() {
 					entry.linePending = 0;
 					entry.transferRX = 0;
 					entry.transferTX = 0;
-					entry.status = PORTSTAT_DISCONN;
 
 					entry.buffRX.clear();
 					entry.buffTX.clear();
@@ -68,6 +67,7 @@ void maddsua::serial::ioloop() {
 					if (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) {
 						//	port is clear
 						entry.cooldown = 0;
+						entry.status = PORTSTAT_DISCONN;
 
 					} else {
 						//	wait for now + PORT_COOLDOWN_MS seconds until next try
@@ -75,8 +75,13 @@ void maddsua::serial::ioloop() {
 						entry.status = PORTSTAT_BUSY;
 					}
 
-					continue;
+				} else if (!parallelOps) {
+					CloseHandle(entry.portHandle);
+					entry.status = PORTSTAT_AVAILABLE;
+					entry.cooldown = (systime + PORT_CD_FAST_MS);
 				}
+
+				if (!parallelOps) continue;
 
 				//	perform setup
 				{
@@ -198,15 +203,37 @@ bool maddsua::serial::write(int comport, std::string data) {
 }
 std::string maddsua::serial::read(int comport) {
 	comport -= PORT_FIRST;
-	if (comport >= pool.size()) return "";
+	if (comport >= pool.size()) return {};
 
 	auto& entry = pool[comport];
-	if (!entry.active) return "";
+	if (!entry.active) return {};
 
 	auto temp = entry.buffRX;
 	entry.buffRX.clear();
 
 	return temp;
+}
+
+std::string maddsua::serial::read() {
+
+	if (portFocus < 0) return {};
+
+	auto& entry = pool[portFocus];
+	if (!entry.active) return {};
+
+	auto temp = entry.buffRX;
+	entry.buffRX.clear();
+
+	return temp;
+}
+bool maddsua::serial::write(std::string data) {
+	if (portFocus < 0) return {};
+
+	auto& entry = pool[portFocus];
+	if (!entry.active) return false;
+
+	entry.buffTX += data;
+	return true;
 }
 
 maddsua::serial::readablePortEntry maddsua::serial::stats(int comport) {
@@ -229,6 +256,10 @@ maddsua::serial::readablePortEntry maddsua::serial::stats(portEntry& entry) {
 		temp.transferTX = entry.transferTX;
 
 	switch (entry.status) {
+		case PORTSTAT_AVAILABLE:
+			temp.status = "available";
+		break;
+
 		case PORTSTAT_BUSY:
 			temp.status = "busy";
 		break;
@@ -279,7 +310,7 @@ std::vector <int> maddsua::serial::portsFree() {
 	std::vector <int> result;
 
 	for (auto entry : pool) {
-		if (entry.status == PORTSTAT_DISCONN) result.push_back(entry.portIndex);
+		if (entry.status == (parallelOps ? PORTSTAT_DISCONN : PORTSTAT_AVAILABLE)) result.push_back(entry.portIndex);
 	}
 
 	return result;
@@ -306,4 +337,18 @@ bool maddsua::serial::setPortState(int comport, maddsua::serial::portAttribs att
 	entry.excluded = ~attribs.enabled;
 
 	return true;
+}
+
+bool maddsua::serial::setFocus(int comport) {
+
+	comport -= PORT_FIRST;
+	if (comport >= pool.size()) return false;
+
+	portFocus = comport;
+
+	return true;
+}
+
+void maddsua::serial::clearFocus() {
+	portFocus = 0;
 }

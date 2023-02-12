@@ -26,7 +26,7 @@ std::vector <int> serialSpeeds = {
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC mainevents;
 
 
@@ -79,7 +79,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
 //	-------		input form enter key press
-LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	
 	//	enter key press
 	if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
@@ -110,67 +110,53 @@ LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 //	-------		app itself
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 
-	//static auto serial = new maddsua::serial(scanSerialPorts);
-	
-	static std::thread worker;
 
 	static uiElements ui;
 	static uiData data;
-	
-	data.speeds = {
-		"110", "300", "600", "1200", "2400", "4800", "9600",
-		"14400", "19200", "38400", "56000", "57600",
-		"115200", "128000", "256000"
-	};
+
+	static auto serial = new maddsua::serial(scanSerialPorts, false);
 
 	static char bufferIn[commsgbuff];
 	static char bufferOut[commsgbuff];
 
-	static char porttemp[125];
-		
+	//static char porttemp[125];
 	
 switch(Message) {
 		
 	case WM_CREATE: {
 					
-		//	init vars
-		//serialPorts = create2d(scanSerialPorts, portNameLen);
+		//	get available serial speeds from the serial api
+		//	ports are not gonna be ready just yet so we will get them by the times later
+		{
+			auto apiSpeeds = serial->getSpeeds();
+			for (auto& item : apiSpeeds) {
+				data.speeds.push_back(std::to_string(item));
+			}
 
-		/*auto active = serial->portsFree();
-		data.ports.clear();
-		for (auto item : active) {
-			data.ports.push_back("COM" + std::to_string(item));
-		}*/
-		
-		scanPorts(&data.ports);
-			
-		data.useNewline = true;
-		data.commstat = 0;
-		
-		//	default settings
-		data.sel_speed = defSerialSpeed;
-		
-		if (data.ports.size()) data.sel_port = data.ports.size() - 1;
-			else data.sel_port = 0;
-		
-		data.isExtended = false;
-		data.viewHistory = false;
+			//	select 9600, bc it's the default
+			for (size_t i = 1; i < data.speeds.size(); i++) {
+				auto item = data.speeds[i];
+				if (item == SIO_DEFAULT_SPEED) {
+					data.speeds.erase(data.speeds.begin() + i);
+					data.speeds.insert(data.speeds.end(), item);
+					break;
+				}
+			}
+			data.sel_speed = data.speeds.size() ? data.speeds.size() - 1 : 0;
+		}			
 
 		uiInit(&hwnd, &ui, &data);
 		
-		//	start app
-		memset(porttemp, 0, sizeof(porttemp));
-		memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
-		worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 		SetTimer(hwnd, CYCLE_PRINT, TTOUT, NULL);
+		SetTimer(hwnd, TIMER_PORTSLIST, TIMEOUT_PORTSLIST, NULL);
 
 		//	redirect keypress event for input form
-		mainevents = (WNDPROC)SetWindowLongPtr(ui.commprompt, GWLP_WNDPROC, (LONG_PTR)cmdEVs);
+		mainevents = (WNDPROC)SetWindowLongPtr(ui.commprompt, GWLP_WNDPROC, (LONG_PTR)keyboardEvents);
 
 		break;
 	}
 	
-	case WM_COMMAND:{
+	case WM_COMMAND: {
 			
 		switch (HIWORD(wParam)) {
 		
@@ -183,7 +169,7 @@ switch(Message) {
 						//	disconnect
 						if (!data.commstat) {
 							data.commstat = 1;
-							worker.join();
+							//worker.join();
 						}
 						
 						//	clear
@@ -198,9 +184,9 @@ switch(Message) {
 						
 						//	reconnect
 						data.commstat = 0;
-						memset(porttemp, 0, sizeof(porttemp));
-						memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
-						worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
+						//memset(porttemp, 0, sizeof(porttemp));
+						//memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
+						//worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 							
 						break;
 					}
@@ -222,11 +208,11 @@ switch(Message) {
 						//	disconnect
 						if (!data.commstat) {
 							data.commstat = 1;
-							worker.join();
+							//worker.join();
 						}
 						
 						//	update port list
-						scanPorts(&data.ports);
+						//scanPorts(&data.ports);
 						dropdown(ui.comboport, &data.ports, data.sel_port, true);
 						
 						//	flush buffers
@@ -242,9 +228,9 @@ switch(Message) {
 						
 						//	reconnect
 						data.commstat = 0;
-						memset(porttemp, 0, sizeof(porttemp));
-						memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
-						worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
+						//memset(porttemp, 0, sizeof(porttemp));
+						//memcpy(porttemp, data.ports[data.sel_port].c_str(), data.ports[data.sel_port].size());
+						//worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 
 						break;
 					}
@@ -431,11 +417,9 @@ switch(Message) {
 		break;
 	}
 	
-	case WM_SETFOCUS: {
-		
+	case WM_SETFOCUS: 
 		SetFocus(ui.commprompt);
-		break;
-	}
+	break;
 	
 	case WM_TIMER: {
 
@@ -476,8 +460,22 @@ switch(Message) {
 			}
 
 			data.commstat = 0;
+
+		} else if (wParam == TIMER_PORTSLIST) {
+
+			auto temp = serial->portsFree();
+
+			if (temp != data.portIndexes) {
+				data.portIndexes = temp;
+
+				data.ports.clear();
+				for (auto item : temp) {
+					data.ports.push_back("COM" + std::to_string(item));
+				}
+				dropdown(ui.comboport, &data.ports, 0, true);
+			}
 		}
-	
+
 		break;
 	}
 	
@@ -485,7 +483,7 @@ switch(Message) {
 		
 		//	close io thread
 		data.commstat = 1;
-		worker.join();
+		//worker.join();
 				
 		//	exit
 		PostQuitMessage(0);

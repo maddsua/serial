@@ -13,15 +13,17 @@
 #define PORTS_COMSMAX		(256)
 #define PORT_FIRST			(1)
 #define PORT_COOLDOWN_MS	(3000)
+#define PORT_CD_FAST_MS		(1000)
 #define PORT_TEXT_WAIT		(300)
 #define PORT_CHUNK			(64)
 
 #define WINERR_DEV_NOTFOUND	(433)
 
-#define PORTSTAT_DISABLED	(4)
-#define PORTSTAT_IGNORED	(3)
-#define PORTSTAT_BUSY		(2)
-#define PORTSTAT_ACTIVE		(1)
+#define PORTSTAT_DISABLED	(5)
+#define PORTSTAT_IGNORED	(4)
+#define PORTSTAT_BUSY		(3)
+#define PORTSTAT_ACTIVE		(2)
+#define PORTSTAT_AVAILABLE	(1)
 #define PORTSTAT_DISCONN	(0)
 #define PORTSTAT_IOERROR	(-1)
 #define PORTSTAT_SETPERR	(-2)
@@ -66,9 +68,11 @@ namespace maddsua {
 				bool ignored = false;
 			};
 
-			serial(int maxPorts) {
+			serial(int maxPorts, bool parallel) {
 				running = true;
 				textmode = true;
+				parallelOps = parallel;
+				portFocus = -1;
 				serialSpeed = 9600;
 				activatePorts = (maxPorts < PORTS_COMSMAX) ? maxPorts : PORTS_COMSMAX;
 
@@ -101,10 +105,18 @@ namespace maddsua {
 			bool write(int comport, std::string data);
 			std::string read(int comport);
 
+			bool setFocus(int comport);
+			void clearFocus();
+
+			bool write(std::string data);
+			std::string read();
+
 		private:
 			int serialSpeed;
 			int activatePorts;
+			int portFocus;
 			bool textmode;
+			bool parallelOps;
 			bool running;
 			void ioloop();
 			std::thread daemon;

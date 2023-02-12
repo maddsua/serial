@@ -27,6 +27,7 @@
 	struct uiData {
 		std::vector <std::string> speeds;
 		std::vector <std::string> ports;
+		std::vector <int> portIndexes;
 
 		std::vector <std::string> commLog;
 		std::vector <std::string> cmdHistory;
@@ -34,15 +35,15 @@
 		std::string buffIn;
 		std::string buffOut;
 
-		int32_t commstat;
+		int commstat = 0;
 
-		size_t sel_speed;
-		size_t sel_port;
-		size_t historyItem;
+		int sel_speed = 0;
+		int sel_port = 0;
+		size_t historyItem = 0;
 
-		bool viewHistory;
-		bool useNewline;
-		bool isExtended;
+		bool viewHistory = false;
+		bool useNewline = true;
+		bool isExtended = false;
 	};
 
 	void uiInit(HWND* appwnd, uiElements* ui, uiData* data);

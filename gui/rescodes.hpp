@@ -17,6 +17,12 @@
 	#define GUI_AT_OK				22
 	#define GUI_AT_ID				23
 
+	//	timeouts
+	#define TIMEOUT_PORTSLIST	(500)
+
+	//	timers
+	#define TIMER_PORTSLIST		(3000)
+
 
 	//	other
 	#define CM_FILE_SVLOG			9070

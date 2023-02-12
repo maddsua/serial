@@ -33,6 +33,7 @@
 	#define winapi_textedit_OVF		28000
 
 	/*		serial IO		*/
+	#define SIO_DEFAULT_SPEED		"9600"
 	#define comSyncDelayMs			1
 	#define comMsgReadSize			32
 	#define comMsgSendSize			(userinputBuffer)
