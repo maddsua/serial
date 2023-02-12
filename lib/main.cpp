@@ -42,13 +42,19 @@ int main() {
 		Sleep(1000);
 	}*/
 
+	//size_t rrr = 0;
+
 	while (true) {
 
 		auto stats = serial->stats();
 
 		for (auto entry : stats) {
 			std::cout << entry.port << ":" << entry.status << std::endl;
-			if (entry.port == 3 && !entry.focus) serial->setFocus(entry.port);
+			//if (rrr == 0) {
+				if (entry.port == 3 && !entry.focus) serial->setFocus(entry.port);
+			/*} else if (rrr > 3) {
+				serial->clearFocus();
+			}*/
 
 			if (entry.focus) {
 				if (entry.dataAvailable) {
@@ -56,7 +62,7 @@ int main() {
 				}
 			}
 		}
-
+		//rrr++;
 		Sleep(1000);
 	}
 	

@@ -154,6 +154,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 		auto entry = serial->stats(data->ports.at(data->sel_port));
 
 		if (!entry.focus) {
+			printf("entry: %i\r\n", entry.port);
 			auto res = serial->setFocus(entry.port);
 		}
 	}
