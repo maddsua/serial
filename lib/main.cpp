@@ -10,20 +10,20 @@
 
 int main() {
 
-	auto com = new maddsua::serial(8, true);
-	com->setSpeed(9600);
+	auto serial = new maddsua::serial(8, true);
+	serial->setSpeed(9600);
 
-	int helloCount = 0;
+/*	int helloCount = 0;
 
 	while (true) {
 
-		auto incoming = com->stats();
+		auto stats = serial->stats();
 
-		for (auto idx : incoming) {
+		for (auto entry : stats) {
 
 			if (idx.dataAvailable) {
 
-				auto msg = com->read(idx.port);
+				auto msg = serial->read(entry.port);
 				std::cout << msg << std::endl;
 
 				if (msg.find("Hello") != std::string::npos) helloCount++;
@@ -31,14 +31,32 @@ int main() {
 				if (helloCount > 2) {
 
 					helloCount = 0;
-					com->write(idx.port, "ping\r\n");
+					serial->write(entry.port, "ping\r\n");
 					
-					auto stats = com->stats(idx.port);
+					auto stats = serial->stats(entry.port);
 					std::cout << "Data transfered: " << (stats.transferTX + stats.transferRX) << std::endl;
 				}
 			}
 		
 		}
+		Sleep(1000);
+	}*/
+
+	while (true) {
+
+		auto stats = serial->stats();
+
+		for (auto entry : stats) {
+			//std::cout << entry.status << std::endl;
+			if (entry.port == 3 && !entry.focus) entry.focus = true;
+
+			if (entry.focus) {
+				if (entry.dataAvailable) {
+					std::cout << serial->read(entry.port) << std::endl;
+				}
+			}
+		}
+
 		Sleep(1000);
 	}
 	
