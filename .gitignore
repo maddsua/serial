@@ -3,4 +3,5 @@ build/
 *.o
 *.exe
 *.res
+*.dll
 cli/data/headerString.txt

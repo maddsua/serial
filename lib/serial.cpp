@@ -1,17 +1,17 @@
 #include "serial.hpp"
 
-const std::array<uint32_t, 17> comSpeeds = {
+const std::array<int, 17> comSpeeds = {
 	110, 150, 300, 600, 1200,
 	1800, 2400, 4800, 7200,
 	9600, 14400, 19200, 38400,
 	56000, 57600, 115200, 128000
 };
 
-std::vector <uint32_t> maddsua::serial::getSpeeds() {
-	return std::vector <uint32_t> (comSpeeds.begin(), comSpeeds.end());
+std::vector <int> maddsua::serial::getSpeeds() {
+	return std::vector <int> (comSpeeds.begin(), comSpeeds.end());
 };
 
-bool maddsua::serial::setSpeed(uint32_t baudrate) {
+bool maddsua::serial::setSpeed(int baudrate) {
 
 	for (auto speed : comSpeeds) {
 		if (baudrate == speed) {
@@ -259,6 +259,28 @@ std::vector <maddsua::serial::readablePortEntry> maddsua::serial::stats() {
 
 	for (auto entry : pool)
 		result.push_back(stats(entry));
+
+	return result;
+}
+
+std::vector <int> maddsua::serial::portsActive() {
+
+	std::vector <int> result;
+
+	for (auto entry : pool) {
+		if (entry.active) result.push_back(entry.portIndex);
+	}
+
+	return result;
+}
+
+std::vector <int> maddsua::serial::portsFree() {
+
+	std::vector <int> result;
+
+	for (auto entry : pool) {
+		if (entry.status == PORTSTAT_DISCONN) result.push_back(entry.portIndex);
+	}
 
 	return result;
 }

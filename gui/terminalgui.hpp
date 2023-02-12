@@ -47,6 +47,7 @@
 
 	void uiInit(HWND* appwnd, uiElements* ui, uiData* data);
 	void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);
+	void displayAboutMessage();
 
 
 #endif

@@ -86,13 +86,15 @@ namespace maddsua {
 				if (daemon.joinable()) daemon.join();
 			}
 
-			bool setSpeed(uint32_t baudrate);
-			std::vector <uint32_t> getSpeeds();
+			bool setSpeed(int baudrate);
+			std::vector <int> getSpeeds();
 
 			std::vector <int> dataAvail();
 
 			std::vector <readablePortEntry> stats();
 			readablePortEntry stats(int comport);
+			std::vector <int> portsActive();
+			std::vector <int> portsFree();
 
 			bool setPortState(int comport, portAttribs attribs);
 
@@ -100,7 +102,7 @@ namespace maddsua {
 			std::string read(int comport);
 
 		private:
-			uint32_t serialSpeed;
+			int serialSpeed;
 			int activatePorts;
 			bool textmode;
 			bool running;

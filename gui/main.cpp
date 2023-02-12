@@ -13,6 +13,8 @@
 #include <string>
 #include <algorithm>
 
+#include "../lib/serial.hpp"
+
 #include "app.hpp"
 #include "terminalgui.hpp"
 
@@ -107,6 +109,8 @@ LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 //	-------		app itself
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+
+	//static auto serial = new maddsua::serial(scanSerialPorts);
 	
 	static std::thread worker;
 
@@ -131,6 +135,13 @@ switch(Message) {
 					
 		//	init vars
 		//serialPorts = create2d(scanSerialPorts, portNameLen);
+
+		/*auto active = serial->portsFree();
+		data.ports.clear();
+		for (auto item : active) {
+			data.ports.push_back("COM" + std::to_string(item));
+		}*/
+		
 		scanPorts(&data.ports);
 			
 		data.useNewline = true;
@@ -153,7 +164,7 @@ switch(Message) {
 		worker = std::thread(serialIO, porttemp, serialSpeeds[data.sel_speed], bufferIn, bufferOut, &data.commstat, data.useNewline);
 		SetTimer(hwnd, CYCLE_PRINT, TTOUT, NULL);
 
-		//	ewdirect keypress input for input form
+		//	redirect keypress event for input form
 		mainevents = (WNDPROC)SetWindowLongPtr(ui.commprompt, GWLP_WNDPROC, (LONG_PTR)cmdEVs);
 
 		break;
@@ -161,13 +172,13 @@ switch(Message) {
 	
 	case WM_COMMAND:{
 			
-		switch(HIWORD(wParam)) {
+		switch (HIWORD(wParam)) {
 		
-			case LBN_SELCHANGE:{
+			case LBN_SELCHANGE: {
 				
 				switch(LOWORD(wParam)) {
 					
-					case GUI_COMBO_PORT:{
+					case GUI_COMBO_PORT: {
 						
 						//	disconnect
 						if (!data.commstat) {
@@ -183,7 +194,7 @@ switch(Message) {
 						data.commLog.clear();
 						
 						//	select
-						data.sel_port = (int) SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
+						data.sel_port = (int)SendMessageW(ui.comboport, CB_GETCURSEL, 0, 0);
 						
 						//	reconnect
 						data.commstat = 0;
@@ -194,19 +205,19 @@ switch(Message) {
 						break;
 					}
 					case GUI_COMBO_SPEED: {
-						data.sel_speed = (int) SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
+						data.sel_speed = (int)SendMessageW(ui.combospeed, CB_GETCURSEL, 0, 0);		
 						break;
 					}
 				}
 				break;
 			}
 			
-			case BN_CLICKED:{
+			case BN_CLICKED: {
 				
 				switch(LOWORD(wParam)) {
 					
 					//	clear button
-					case GUI_BTN_CLR:{
+					case GUI_BTN_CLR: {
 						
 						//	disconnect
 						if (!data.commstat) {
@@ -239,7 +250,7 @@ switch(Message) {
 					}
 					
 					//	send button
-					case GUI_BTN_SEND:{
+					case GUI_BTN_SEND: {
 						
 						data.viewHistory = false;
 						
@@ -259,7 +270,6 @@ switch(Message) {
 								for (int i = 0; i < data.cmdHistory.size(); i++) {
 									
 									if (userCommand == data.cmdHistory[i]) {
-										
 										foundCmd = true;
 										foundCmdIndex = i;
 									}
@@ -280,7 +290,7 @@ switch(Message) {
 								
 								//	add port info
 								char logtmp[comlogbuff];
-									metalog(userCommand, data.ports[data.sel_port].c_str(), logtmp, true);
+								metalog(userCommand, data.ports[data.sel_port].c_str(), logtmp, true);
 								
 								//	display and write log
 								log(ui.terminalwindow, logtmp);
@@ -298,7 +308,7 @@ switch(Message) {
 					}
 					
 					//	AT-buttons
-					case GUI_AT_PREF:{
+					case GUI_AT_PREF: {
 						
 						//	copy text to command prompt
 						SetWindowTextA(ui.commprompt, "AT+");
@@ -328,47 +338,43 @@ switch(Message) {
 						break;
 					}
 					
-				//	checkboxes	
+					//	checkboxes	
 					case GUI_CHK_NLN:{
 						
 						//	just get the flag
-						data.useNewline = (bool) SendMessageW(ui.newlinecheck, BM_GETCHECK, 0, 0);
+						data.useNewline = (bool)SendMessageW(ui.newlinecheck, BM_GETCHECK, 0, 0);
 						break;
 					}
 					
-					case GUI_CHK_QKAT:{
+					case GUI_CHK_QKAT: {
 						
 						unsigned short int showflag;
 						
 						if (data.isExtended) {
 							data.isExtended = false;
 							showflag = 0;
-						}
-						else{
+
+						} else {
 							data.isExtended = true;
 							showflag = 1;
 						}
 						
 						//	draw extended controls
-							ShowWindow(ui.atbtn_prefix, showflag);
-							ShowWindow(ui.atbtn_ok, showflag);
-							ShowWindow(ui.atbtn_id, showflag);
-							ShowWindow(ui.atbtn_at, showflag);
+						ShowWindow(ui.atbtn_prefix, showflag);
+						ShowWindow(ui.atbtn_ok, showflag);
+						ShowWindow(ui.atbtn_id, showflag);
+						ShowWindow(ui.atbtn_at, showflag);
 
 						break;
 					}
 					
-				//	menus
-					case CM_ABOUT:{
-						
-						char msgabout[256] = {0};
-							sprintf(msgabout, "%s v%s\nA serial port communication utility\n\n%s\n%s", APP_NAME, APP_VERSION, VER_AUTHSTAMP, APP_COPYRIGHT);
-							
-						MessageBoxA(NULL, msgabout, "About...", 0);
-						break;
-					}
+					//	menus
+					case CM_ABOUT:
+						displayAboutMessage();
+					break;
 					
-					case CM_FILE_SVLOG:{
+					
+					case CM_FILE_SVLOG: {
 						
 						OPENFILENAMEA ofn = {0};
 							char fpath[MAX_PATH] = {0};
@@ -409,8 +415,7 @@ switch(Message) {
 								
 								data.historyItem = data.cmdHistory.size() - 1;
 								data.viewHistory = true;
-							}
-							else{
+							} else{
 							
 								if (lParam == 0) {
 									data.historyItem--;
@@ -423,8 +428,8 @@ switch(Message) {
 								//	set index in range
 								if (data.historyItem < 0) {
 									data.historyItem = 0;
-								}
-								else if (data.historyItem >= data.cmdHistory.size()) {
+
+								} else if (data.historyItem >= data.cmdHistory.size()) {
 									data.historyItem = data.cmdHistory.size() - 1;
 								}
 							
@@ -447,50 +452,53 @@ switch(Message) {
 		break;
 	}
 	
-	case WM_SETFOCUS:{
+	case WM_SETFOCUS: {
 		
 		SetFocus(ui.commprompt);
 		break;
 	}
 	
 	case WM_TIMER: {
-		
-		if (!data.commstat && strlen(bufferIn) > 0) {
-			
-			char logtmp[comlogbuff];
-			
-			if (data.useNewline) metalog(bufferIn, data.ports[data.sel_port].c_str(), logtmp, false);
-			else strcpy(logtmp, bufferIn);
 
-			log(ui.terminalwindow, logtmp);
-			data.commLog.push_back(logtmp);
-			
-			memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
-		}
+		if (wParam == CYCLE_PRINT) {
 
-		switch (data.commstat) {
-			case 2:
-				log(ui.terminalwindow, "___ Port is not connected ___\n");
-			break;
-
-			case 3:
-				log(ui.terminalwindow, "___ Port busy ___\n");
-			break;
-
-			case 4:
-				log(ui.terminalwindow, "___ Port config error ___\n");
-			break;
-
-			case 6:
-				log(ui.terminalwindow, "___ Port has been disconnected ___\n");
-			break;
-		
-			default:
-			break;
-		}
+			if (!data.commstat && strlen(bufferIn) > 0) {
 				
-		data.commstat = 0;
-		
+				char logtmp[comlogbuff];
+				
+				if (data.useNewline) metalog(bufferIn, data.ports[data.sel_port].c_str(), logtmp, false);
+				else strcpy(logtmp, bufferIn);
+
+				log(ui.terminalwindow, logtmp);
+				data.commLog.push_back(logtmp);
+				
+				memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
+			}
+
+			switch (data.commstat) {
+				case 2:
+					log(ui.terminalwindow, "___ Port is not connected ___\n");
+				break;
+
+				case 3:
+					log(ui.terminalwindow, "___ Port busy ___\n");
+				break;
+
+				case 4:
+					log(ui.terminalwindow, "___ Port config error ___\n");
+				break;
+
+				case 6:
+					log(ui.terminalwindow, "___ Port has been disconnected ___\n");
+				break;
+			
+				default:
+				break;
+			}
+
+			data.commstat = 0;
+		}
+	
 		break;
 	}
 	
@@ -502,7 +510,6 @@ switch(Message) {
 				
 		//	exit
 		PostQuitMessage(0);
-		
 		break;
 	}
 	

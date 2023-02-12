@@ -14,7 +14,7 @@
 
 	#define APP_NAME		"Serial Terminal"
 	#define APP_VERSION		"2.0.1"
-	#define APP_DESC		"Serial Terminal (COM monitor)"
+	#define APP_DESC		"A serial port communication utility"
 	#define VER_AUTHSTAMP	"2023 maddsua"
 	#define APP_COPYRIGHT	"https://github.com/maddsua"
 

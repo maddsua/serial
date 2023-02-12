@@ -13,7 +13,7 @@ int main() {
 
 	while (true) {
 
-		auto incoming = com->dataAvail();
+		/*auto incoming = com->dataAvail();
 
 		for (auto idx : incoming) {
 		
@@ -30,8 +30,18 @@ int main() {
 				auto stats = com->stats(idx);
 				std::cout << "Data transfered: " << (stats.transferTX + stats.transferRX) << std::endl;
 			}
+
+
+		}*/
+
+		auto all = com->stats();
+
+		for (auto item : all) {
+			std::cout << "code: " << item.status << std::endl;
 		}
-		Sleep(10);
+		std::cout << std::endl;
+
+		Sleep(1000);
 	}
 	
 	return 0;

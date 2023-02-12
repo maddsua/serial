@@ -1,8 +1,9 @@
 
 APP        = SerialTerminal.exe
-OBJECTS    = app.res appops.o serialcomms.o ui.o
+OBJECTS    = app.res appops.o serialcomms.o ui.o ../lib/serial.o
 FLAGS      = -std=c++20 -mwindows
-LIBS       = -lgdi32 -lcomdlg32
+LIBS       = -lgdi32 -lcomdlg32 -lwinmm
+# -L"../lib" -lserialapi
 
 .PHONY: all all-before all-after clean-custom run-custom lib demo
 all: all-before $(APP) all-after
@@ -30,6 +31,9 @@ appops.o: appops.cpp
 
 serialcomms.o: serialcomms.cpp
 	g++ -c serialcomms.cpp -o serialcomms.o $(FLAGS)
+
+../lib/serial.o: ../lib/serial.cpp
+	g++ -c ../lib/serial.cpp -o ../lib/serial.o $(FLAGS)
 
 app.res: app.rc
 	windres -i app.rc --input-format=rc -o app.res -O coff 

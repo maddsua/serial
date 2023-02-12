@@ -1,5 +1,6 @@
 #include "terminalgui.hpp"
 #include "rescodes.hpp"
+#include "app.hpp"
 
 void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	//	drop lists
@@ -51,4 +52,13 @@ void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool e
 	}
 
 	SendMessage(combo, CB_SETCURSEL , focus, 0);
+}
+
+void displayAboutMessage() {
+
+	std::string msg = std::string(APP_NAME) + " v" + APP_VERSION +
+		"\nA serial port communication utility\n\n" +
+		VER_AUTHSTAMP + "\n" + APP_COPYRIGHT;
+		
+	MessageBoxA(NULL, msg.c_str(), "About...", 0);
 }
