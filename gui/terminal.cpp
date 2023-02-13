@@ -1,4 +1,4 @@
-#include "terminalgui.hpp"
+#include "terminal.hpp"
 
 #include <fstream>
 #include <stdio.h>

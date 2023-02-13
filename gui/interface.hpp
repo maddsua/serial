@@ -1,24 +1,31 @@
+//  2023 maddsua | https://github.com/maddsua
+//	No warranties are given, etc...
+//	This file is a component of the Serial Terminal (graphical version)
+
 
 #ifndef _SERIALTERMINALAPPGUI
 #define _SERIALTERMINALAPPGUI
 
-	#include <windows.h>
-	#include <CommCtrl.h>
-
+	#include <stdint.h>
 	#include <vector>
 	#include <string>
-	#include <algorithm>
+	#include <windows.h>
 
 	#include "rescodes.hpp"
-	#include "app.hpp"
 
-	#include "../lib/serial.hpp"
+	#define APP_NAME		"Serial Terminal"
+	#define APP_VERSION		"4.0.0"
+	#define APP_TITLE		APP_NAME " v" APP_VERSION
+	#define APP_DESC		"A serial port communication utility"
+	#define VER_AUTHSTAMP	"2023 maddsua"
+	#define APP_COPYRIGHT	"https://github.com/maddsua"
 
-	#define TERMINAL_MAX_TEXTLEN	(28000)
-	#define TERMINAL_CUT_OVERFLOW	(1000)
 
-	#define HISTORY_FORWARD			(-1)
-	#define HISTORY_BACKWARD		(1)
+	#define windowSizeX				640
+	#define windowSizeY				480
+
+	#define IO_DEFAULT_SPEED		(9600)
+
 
 	struct uiElements {
 		HWND terminal;
@@ -35,6 +42,9 @@
 		HWND check_textmode;
 
 		HWND statusbar;
+
+		HMENU menu_main;
+		HMENU menu_hexStyle;
 	};
 
 	struct endlineoption {
@@ -62,13 +72,15 @@
 		bool showTimestamps = true;
 		bool echoInputs = true;
 		bool textmode = true;
+		bool hexStyleFull = true;
 
 		bool viewHistory = false;
 		bool useNewline = true;
 		bool isExtended = false;
 	};
+	
 
-	//	ini gui
+	//	init gui
 	void uiInit(HWND* appwnd, uiElements* ui, appData* data);
 
 	//	set bombobox items
@@ -77,20 +89,7 @@
 	//	display About Message, captain obvious
 	void displayAboutMessage();
 
-	//	save communacations log to a file
-	void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata);
-
-	//	update available ports
-	void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data);
-
-	//	print messages to a terminal
-	void printComm(uiElements* ui, appData* data, std::string message, bool incoming);
-
-	void updateStatusBar(maddsua::serial* serial, uiElements* ui, appData* data);
-
-	void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data);
-
-	void historyRecall(uiElements* ui, appData* data, int step);
+	void selectSubmenu_hexStyle(uiElements* ui, size_t selectID);
 
 
 #endif

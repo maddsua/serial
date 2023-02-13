@@ -6,20 +6,27 @@
 APPICON				ICON	"../design/icon_gui.ico"
 ICON_BUTTON_SEND	BITMAP	"res/button-send.bmp"
 
-MAINMENU MENU{
+MAINMENU MENU {
 	
 	POPUP "&File"{
-		MENUITEM "&Save log", CONTEXT_FILE_SVLOG
+		MENUITEM "&Save log", MENUITEM_FILE_SVLOG
 		MENUITEM SEPARATOR
-		MENUITEM "&Exit", CONTEXT_FILE_EXIT
+		MENUITEM "&Exit", MENUITEM_FILE_EXIT
 	}
 
 	POPUP "&Terminal"{
-		MENUITEM "&Clear", CONTEXT_CLEAR
+		POPUP "&Hex style" {
+			MENUITEM "&Short (07 FA)", SUBMENU_HEXSTYLE_SHORT
+			MENUITEM "&Full (0x07 0xFA)", SUBMENU_HEXSTYLE_FULL
+		}
+
+		MENUITEM SEPARATOR
+
+		MENUITEM "&Clear Terminal", MENUITEM_CLEAR
 	}
 
 	POPUP "&Help"{
-		MENUITEM "&About", CONTEXT_ABOUT
+		MENUITEM "&About", MENUITEM_ABOUT
 	}
 }
 
@@ -36,7 +43,7 @@ FILETYPE VFT_APP
       VALUE "FileVersion", "4.0.0"
       VALUE "FileDescription", "Serial Terminal (COM monitor)"
       VALUE "InternalName", "SerialTerminalGraphical"
-      VALUE "LegalCopyright", "https://gitlab.com/maddsua"
+      VALUE "LegalCopyright", "https://github.com/maddsua"
       VALUE "LegalTrademarks", "2023 maddsua/dev"
       VALUE "OriginalFilename", "serterg"
       VALUE "ProductName", "Serial Terminal"

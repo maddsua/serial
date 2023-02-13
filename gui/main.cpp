@@ -15,8 +15,8 @@
 
 #include "../lib/serial.hpp"
 
-#include "app.hpp"
-#include "terminalgui.hpp"
+#include "interface.hpp"
+#include "terminal.hpp"
 
 const std::vector <uint32_t> serialSpeeds = {
 	110, 300, 600, 1200, 2400, 4800, 9600,
@@ -41,7 +41,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.hInstance	 = hInstance;
 	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wc.lpszMenuName  = "MAINMENU";
+	wc.lpszMenuName  = APP_MAIN_MENU_ID;
 	wc.lpszClassName = "terminalMainWindow";
 	wc.hIcon		 = LoadIconA(hInstance, "APPICON");
 	wc.hIconSm		 = LoadIconA(hInstance, "APPICON");
@@ -79,14 +79,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 	static uiElements ui;
 	static appData data;
-		data.endlines = {
-			{"CR+LF", "\r\n"},
-			{"No endline", {/* empty line */}},
-			{"CR only", "\r"},
-			{"LF only", "\n"}
-		};
+
+	//	set default line endings
+	data.endlines = {
+		{"CR+LF", "\r\n"},
+		{"No endline", {/* empty line */}},
+		{"CR only", "\r"},
+		{"LF only", "\n"}
+	};
 
 	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
+
+	//	get menus
+	ui.menu_main = GetMenu(hwnd);
+	ui.menu_hexStyle = GetSubMenu(ui.menu_main, 1);	//	(1) - index of that menu by the resource file
 
 	static HBRUSH hbrBkgnd = 0;
 	
@@ -181,19 +187,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						
 						
 						//	context menus
-						case CONTEXT_ABOUT: {
+						case MENUITEM_ABOUT: {
 							displayAboutMessage();
 						} break;
 											
-						case CONTEXT_FILE_SVLOG: {
+						case MENUITEM_FILE_SVLOG: {
 							saveCommLog(&hwnd, &data.log);
 						} break;
 						
-						case CONTEXT_FILE_EXIT: {
+						case MENUITEM_FILE_EXIT: {
 							PostMessage(hwnd, WM_CLOSE, 0, 0);
 						} break;
 
-						case CONTEXT_CLEAR: {
+						case MENUITEM_CLEAR: {
 
 							//	clear log
 							data.log.clear();
@@ -205,9 +211,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 						} break;
 
+						case SUBMENU_HEXSTYLE_SHORT: {
+
+							data.hexStyleFull = false;
+							selectSubmenu_hexStyle(&ui, SUBMENU_HEXSTYLE_SHORT);
+
+						} break;
+
+						case SUBMENU_HEXSTYLE_FULL: {
+
+							data.hexStyleFull = true;
+							selectSubmenu_hexStyle(&ui, SUBMENU_HEXSTYLE_FULL);
+							
+						} break;
 
 						//	custom events
-						case KBEV_HISTORY: {
+						case KEYBOARD_ARROWS: {
 							historyRecall(&ui, &data, lParam);
 						} break;
 					}
@@ -255,6 +274,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 			delete serial;
 			PostQuitMessage(0);
+			//DestroyWindow(ui.button_send);
 
 		} break;
 
@@ -286,9 +306,9 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 				case VK_RETURN: return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BTN_SEND, 0);
 
-				case VK_UP: return CallWindowProc(WndProc, wnd, WM_COMMAND, KBEV_HISTORY, (LPARAM)HISTORY_FORWARD);
+				case VK_UP: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_FORWARD);
 
-				case VK_DOWN: return CallWindowProc(WndProc, wnd, WM_COMMAND, KBEV_HISTORY, (LPARAM)HISTORY_BACKWARD);
+				case VK_DOWN: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_BACKWARD);
 			
 				default: break;
 			}

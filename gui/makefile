@@ -1,6 +1,6 @@
 
 APP        = SerialTerminal.exe
-OBJECTS    = app.res terminal.o gui.o ../lib/serial.o
+OBJECTS    = app.res terminal.o interface.o ../lib/serial.o
 FLAGS      = -std=c++20 -g
 LIBS       = -lgdi32 -lcomdlg32 -lwinmm
 # -L"../lib" -lserialapi
@@ -27,8 +27,8 @@ $(APP): main.o $(OBJECTS) rescodes.hpp
 terminal.o: terminal.cpp
 	g++ -c terminal.cpp -o terminal.o $(FLAGS)
 
-gui.o: gui.cpp
-	g++ -c gui.cpp -o gui.o $(FLAGS)
+interface.o: interface.cpp
+	g++ -c interface.cpp -o interface.o $(FLAGS)
 
 ../lib/serial.o: ../lib/serial.cpp
 	g++ -c ../lib/serial.cpp -o ../lib/serial.o $(FLAGS)
