@@ -18,9 +18,9 @@ struct statustexts {
 };
 
 const std::vector <statustexts> statuscodes = {
-	{ SPSTAT_ACTIVE, "Active" },
+	{ SPSTAT_ACTIVE, "Connected" },
 	{ SPSTAT_AVAILABLE, "Available" },
-	{ SPSTAT_BUSY, "Busy" },
+	{ SPSTAT_BUSY, "Device busy" },
 	{ SPSTAT_DISABLED, "Disabled" },
 	{ SPSTAT_DISCONN, "Disconnected" },
 	{ SPSTAT_IGNORED, "Ignored" },

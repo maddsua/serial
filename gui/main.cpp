@@ -203,9 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 						//	custom events
 						case KBEV_HISTORY: {
-
-							printf("Direction: %i\n", lParam);
-														
+							historyRecall(&ui, &data, lParam);
 						} break;
 					}
 					

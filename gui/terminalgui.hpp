@@ -6,7 +6,6 @@
 	#include <CommCtrl.h>
 
 	#include <vector>
-	#include <list>
 	#include <string>
 	#include <algorithm>
 
@@ -18,8 +17,8 @@
 	#define TERMINAL_MAX_TEXTLEN	(28000)
 	#define TERMINAL_CUT_OVERFLOW	(1000)
 
-	#define HISTORY_FORWARD			(1)
-	#define HISTORY_BACKWARD		(-1)
+	#define HISTORY_FORWARD			(-1)
+	#define HISTORY_BACKWARD		(1)
 
 	struct uiElements {
 		HWND terminal;
@@ -48,7 +47,7 @@
 		std::vector <endlineoption> endlines;
 
 		std::vector <std::string> log;
-		std::list <std::string> history;
+		std::vector <std::string> history;
 
 		std::string buffIn;
 		std::string buffOut;
@@ -56,6 +55,7 @@
 		size_t sel_speed = 0;
 		size_t sel_port = 0;
 		size_t sel_endline = 0;
+		size_t sel_history = 0;
 		size_t historyItem = 0;
 
 		bool showTimestamps = true;
@@ -87,6 +87,8 @@
 	void updateStatusBar(maddsua::serial* serial, uiElements* ui, appData* data);
 
 	void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data);
+
+	void historyRecall(uiElements* ui, appData* data, int step);
 
 
 #endif
