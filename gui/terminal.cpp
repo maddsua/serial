@@ -213,7 +213,8 @@ void historyRecall(uiElements* ui, appData* data, int direction) {
 	//	move history cursor
 	auto nextIndex = data->sel_history + direction;
 	if (nextIndex == UINT64_MAX) data->sel_history = data->history.size() - 1;
-	else if (nextIndex > data->history.size()) data->sel_history = 0;
+		else if (nextIndex >= data->history.size()) data->sel_history = 0;
+			else data->sel_history = nextIndex;
 
 	//	insert text
 	SetWindowTextA(ui->command, data->history.at(data->sel_history).c_str());
