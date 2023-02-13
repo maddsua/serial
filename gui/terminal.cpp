@@ -190,7 +190,7 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 		}
 	}
 	data->history.push_back(message);
-	data->sel_history = data->history.size() ? (data->history.size() - 1) : 0;
+	
 
 	//	write data to com port
 	auto port = data->ports.at(data->sel_port);
@@ -201,7 +201,7 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	}
 
 	//	clear command prompt
-	SetWindowText(ui->command, NULL);
+	resetCommandPrompt(ui, data);
 }
 
 void historyRecall(uiElements* ui, appData* data, int direction) {
@@ -258,4 +258,9 @@ void restoreEscapedChars(std::string* text) {
 			i -= 2;
 		}
 	}
+}
+
+void resetCommandPrompt(uiElements* ui, appData* data) {
+	data->sel_history = data->history.size() ? (data->history.size() - 1) : 0;
+	SetWindowText(ui->command, NULL);
 }
