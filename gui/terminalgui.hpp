@@ -23,7 +23,7 @@
 
 		HWND comboSpeed;
 		HWND comboPort;
-		HWND comboLine;
+		HWND comboLineEnding;
 
 		HWND btnSend;
 

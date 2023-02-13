@@ -143,12 +143,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 				
 			switch (HIWORD(wParam)) {
 			
+				//	dropdowns
 				case LBN_SELCHANGE: {
 					
 					switch(LOWORD(wParam)) {
 						
 						case GUI_COMBO_PORT: {
-							
+
 							//	select a different port
 							size_t temp = SendMessageW(ui.comboPort, CB_GETCURSEL, 0, 0);
 							//	exit if it's the same
@@ -158,12 +159,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							data.sel_port = temp;
 							//	reset
 							serial->clearFocus();
-														
-							break;
-						}
 
+						} break;
+						
 						case GUI_COMBO_SPEED: {
-							
+
 							//	select different speed
 							size_t temp = SendMessageW(ui.comboSpeed, CB_GETCURSEL, 0, 0);	
 							//	exit if it's the same
@@ -174,12 +174,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							serial->setSpeed(data.speeds.at(data.sel_speed));
 							serial->clearFocus();
 
-							break;
-						}
+						} break;
+						
+						case GUI_COMBO_LINE: {
+							data.sel_endline = SendMessageW(ui.comboLineEnding, CB_GETCURSEL, 0, 0);
+						} break;
+						
 					}
 
-					break;
-				}
+				} break;
 				
 				//	buttons
 				case BN_CLICKED: {
@@ -187,36 +190,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 					switch(LOWORD(wParam)) {
 												
 						//	send
-						case GUI_BTN_SEND:
+						case GUI_BTN_SEND: {
 							sendMessage(serial, &ui, &data);
-						break;
+						} break;
 						
 
 						//	checkboxes
-						case CHECKBOX_TIMESTAMP: 
+						case CHECKBOX_TIMESTAMP: {
 							data.showTimestamps = SendMessageA(ui.timestamps, BM_GETCHECK, 0, 0);
-						break;
+						} break;
 						
-						case CHECKBOX_ECHOCMD: 
+						case CHECKBOX_ECHOCMD: {
 							data.echoCommands = SendMessageA(ui.echoCommands, BM_GETCHECK, 0, 0);
-						break;
+						} break;
 						
 						
 						//	context menus
-						case CONTEXT_ABOUT:
+						case CONTEXT_ABOUT: {
 							displayAboutMessage();
-						break;
+						} break;
 											
-						case CONTEXT_FILE_SVLOG: 
+						case CONTEXT_FILE_SVLOG: {
 							saveCommLog(&hwnd, &data.log);
-						break;
+						} break;
 						
-						case CONTEXT_FILE_EXIT: 
+						case CONTEXT_FILE_EXIT: {
 							PostMessage(hwnd, WM_CLOSE, 0, 0);
-						break;
+						} break;
 
 						case CONTEXT_CLEAR: {
-							
+
 							//	clear log
 							data.log.clear();
 							//	erase texts
@@ -224,9 +227,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							SetWindowText(ui.terminal, NULL);
 							//	reset serial comms
 							serial->clearFocus();
-							
-							break;
-						}
+
+						} break;
 
 
 						//	custom events
@@ -265,50 +267,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 								SendMessage(ui.command, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
 							}
 							
-							break;
-						}
+						} break;
 					}
 					
-					break;
-				}
+				} break;
 			}
 			
-			break;
-		}
+		} break;
 		
-		case WM_SETFOCUS: 
+		case WM_SETFOCUS: {
 			SetFocus(ui.command);
-		break;
+		} break;
 		
 		case WM_TIMER: {
 
-			if (wParam == TIMER_DATAREAD) {
+			switch (wParam) {
 
-				//	exit if we can't access a port just yet
-				if (data.sel_port >= data.ports.size()) break;
+				case TIMER_DATAREAD: {
 
-				auto input = serial->read(data.ports.at(data.sel_port));
+					//	exit if we can't access a port just yet
+					if (data.sel_port >= data.ports.size()) break;
 
-				if (!input.size()) break;
+					auto input = serial->read(data.ports.at(data.sel_port));
 
-				printComm(&ui, &data, input, true);
+					if (!input.size()) break;
 
-			} else if (wParam == TIMER_PORTSLIST) {
+					printComm(&ui, &data, input, true);
 
-				updateComPorts(serial, &ui, &data);
-				updateStatusBar(serial, &ui, &data);
+				} break;
+
+				case TIMER_PORTSLIST: {
+
+					updateComPorts(serial, &ui, &data);
+					updateStatusBar(serial, &ui, &data);
+
+				} break;
+				
+			
+				default: break;
 			}
 
-			break;
-		}
+		} break;
+		
 		
 		case WM_DESTROY: {
 
 			delete serial;
 			PostQuitMessage(0);
 
-			break;
-		}
+		} break;
 
 		/*case WM_CTLCOLORSTATIC: {
 			HDC hdcStatic = (HDC) wParam;
@@ -321,8 +328,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		}*/
 		
 		
-		default:
-			return DefWindowProc(hwnd, Message, wParam, lParam);
+		default: return DefWindowProc(hwnd, Message, wParam, lParam);
 	}
 
 	return 0;

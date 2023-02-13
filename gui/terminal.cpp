@@ -33,11 +33,11 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	ui->comboPort = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
 
 	//	line ending selector
-	ui->comboLine = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
+	ui->comboLineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
 	{
 		std::vector <std::string> temp;
 		for (auto item : data->endlines) temp.push_back(item.title);
-		dropdown(&ui->comboLine, &temp, data->sel_endline, false);
+		dropdown(&ui->comboLineEnding, &temp, data->sel_endline, false);
 	}
 
 	//	terminal window itself

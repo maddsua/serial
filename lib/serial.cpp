@@ -239,13 +239,14 @@ void maddsua::serial::ioloop() {
 				entry.buffRXTemp.insert(entry.buffRXTemp.end(), rxTemp, rxTemp + rxBytesRead);
 				entry.linePending = timeGetTime() + PORT_TEXT_WAIT;
 
-				auto newline = entry.buffRXTemp.find_last_of('\n');
-				if (newline != std::string::npos) {
-					entry.buffRX = std::string(entry.buffRXTemp.begin(), entry.buffRXTemp.begin() + newline + 1);
-					entry.buffRXTemp.erase(0, newline + 1);
+				auto lineSeparator = entry.buffRXTemp.find_last_of('\n');
+				if (lineSeparator == std::string::npos) lineSeparator = entry.buffRXTemp.find_last_of('\r');
+				if (lineSeparator != std::string::npos) {
+					entry.buffRX += std::string(entry.buffRXTemp.begin(), entry.buffRXTemp.begin() + lineSeparator + 1);
+					entry.buffRXTemp.erase(0, lineSeparator + 1);
 
 				} else if (entry.linePending && (timeGetTime() > entry.linePending)) {
-					entry.buffRX = entry.buffRXTemp;
+					entry.buffRX += entry.buffRXTemp;
 					entry.buffRXTemp.clear();
 				}
 
