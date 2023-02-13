@@ -14,8 +14,8 @@ clean: clean-custom
 #	rm -rf *.exe *.a *.dll
 
 purge: clean-custom
-	del /S *.o *.exe *.a *.dll
-#	rm -rf *.o *.exe *.a *.dll
+	del /S *.o *.exe *.a *.dll *.res
+#	rm -rf *.o *.exe *.a *.dll *.res
 
 run: run-custom
 	$(APP)
