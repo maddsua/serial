@@ -36,6 +36,7 @@
 
 	//	custom events
 	#define KEYBOARD_ARROWS			(5001)
+	#define KEYBOARD_ESCAPE			(5002)
 
 	//	timers
 	#define TIMER_PORTSLIST			(10001)
