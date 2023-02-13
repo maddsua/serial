@@ -3,6 +3,28 @@
 #include <fstream>
 #include <stdio.h>
 
+const uint8_t hex_table[16] = {
+	'0','1','2','3','4','5','6','7',
+	'8','9','a','b','c','d','e','f'
+};
+
+std::string bytesToHex(std::string bytes, bool fullStyle) {
+
+	std::string result;
+
+	char temp[5] = "0x00";
+
+	for (size_t i = 0; i < bytes.size(); i++) {
+		temp[2] = hex_table[(bytes[i] & 0xF0) >> 4];
+		temp[3] = hex_table[bytes[i] & 0x0F];
+
+		result.insert(result.end(), temp + (fullStyle ? 0 : 2), temp + 4);
+		if (i < bytes.size() - 1) result += ' ';
+	}
+
+	return result;
+}
+
 void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 	OPENFILENAMEA ofn;
@@ -88,8 +110,13 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data) {
 
 void printComm(uiElements* ui, appData* data, std::string message, bool incoming) {
 
+	//	message preformatting
+	if (incoming && data->hexMode) message = bytesToHex(message, data->hexStyleFull);
+	
+	if (!incoming || data->hexMode) message += "\r\n";
+
 	//	add port name and data direction
-	if (data->sel_port < data->ports.size() && data->textmode) {
+	if (data->sel_port < data->ports.size()) {
 		auto portInfo = std::string("COM") + std::to_string(data->ports.at(data->sel_port)) + (incoming ? "  --->  " : "  <---  ");
 		message.insert(message.begin(), portInfo.begin(), portInfo.end());
 	}
@@ -102,8 +129,6 @@ void printComm(uiElements* ui, appData* data, std::string message, bool incoming
 		strftime(timebuff, sizeof(timebuff), "[%H:%M:%S]  ", timedata);
 		message.insert(message.begin(), timebuff, timebuff + strlen(timebuff));
 	}
-
-	if (!incoming) message += "\n";
 	
 	//	remove old data from terminal if it's too big
 	size_t txtcontlen = SendMessage(ui->terminal, WM_GETTEXTLENGTH, 0, 0);

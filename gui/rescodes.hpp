@@ -17,7 +17,7 @@
 	#define GUI_CHK_QKAT			(20)
 	#define CHECKBOX_TIMESTAMP		(100)
 	#define CHECKBOX_ECHOCMD		(101)
-	#define CHECKBOX_TEXTMODE		(102)
+	#define CHECKBOX_HEXMODE		(102)
 
 	//	context menus
 	#define MENUITEM_FILE_SVLOG		(2001)
@@ -26,7 +26,7 @@
 	#define MENUITEM_CLEAR			(2101)
 	#define SUBMENU_HEXSTYLE_SHORT	(2111)
 	#define SUBMENU_HEXSTYLE_FULL	(2112)
-	
+
 	#define MENUITEM_ABOUT			(2201)
 	#define MENUITEM_HELP			(2202)
 

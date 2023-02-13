@@ -33,5 +33,7 @@
 
 	void historyRecall(uiElements* ui, appData* data, int step);
 
+	std::string bytesToHex(std::string bytes, bool fullStyle);
+
 
 #endif

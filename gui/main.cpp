@@ -180,9 +180,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							data.echoInputs = SendMessageA(ui.check_echo, BM_GETCHECK, 0, 0);
 						} break;
 
-						case CHECKBOX_TEXTMODE : {
-							data.textmode = SendMessageA(ui.check_textmode, BM_GETCHECK, 0, 0);
-							serial->setmode(data.textmode);
+						case CHECKBOX_HEXMODE : {
+							data.hexMode = SendMessageA(ui.check_hexMode, BM_GETCHECK, 0, 0);
+							serial->setmode(!data.hexMode);
 						} break;
 						
 						
@@ -222,7 +222,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 							data.hexStyleFull = true;
 							selectSubmenu_hexStyle(&ui, SUBMENU_HEXSTYLE_FULL);
-							
+
 						} break;
 
 						//	custom events

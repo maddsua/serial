@@ -39,7 +39,7 @@
 
 		HWND check_time;
 		HWND check_echo;
-		HWND check_textmode;
+		HWND check_hexMode;
 
 		HWND statusbar;
 
@@ -71,8 +71,8 @@
 
 		bool showTimestamps = true;
 		bool echoInputs = true;
-		bool textmode = true;
-		bool hexStyleFull = true;
+		bool hexMode = false;
+		bool hexStyleFull = false;
 
 		bool viewHistory = false;
 		bool useNewline = true;

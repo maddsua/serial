@@ -63,8 +63,8 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	ui->check_echo = CreateWindowA(WC_BUTTONA, "Echo commands", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 125, 10, 105, 16, *appwnd, (HMENU)CHECKBOX_ECHOCMD, NULL, NULL);
 	SendMessageA(ui->check_echo, BM_SETCHECK, data->echoInputs, 0);
 
-	ui->check_textmode = CreateWindowA(WC_BUTTONA, "Text mode", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 235, 10, 75, 16, *appwnd, (HMENU)CHECKBOX_TEXTMODE, NULL, NULL);
-	SendMessageA(ui->check_textmode, BM_SETCHECK, data->textmode, 0);
+	ui->check_hexMode = CreateWindowA(WC_BUTTONA, "HEX mode", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 235, 10, 75, 16, *appwnd, (HMENU)CHECKBOX_HEXMODE, NULL, NULL);
+	SendMessageA(ui->check_hexMode, BM_SETCHECK, data->hexMode, 0);
 
 	//	status bar
 	ui->statusbar = CreateWindowA(WC_STATICA, "Starting up...", WS_VISIBLE | WS_CHILD | SS_LEFT, 5, 410, 200, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
