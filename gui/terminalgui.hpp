@@ -19,7 +19,7 @@
 
 	struct uiElements {
 		HWND terminal;
-		HWND cmdInput;
+		HWND command;
 
 		HWND comboSpeed;
 		HWND comboPort;
@@ -38,7 +38,7 @@
 		std::string bytes;
 	};
 
-	struct uiData {
+	struct appData {
 		std::vector <uint32_t> speeds;
 		std::vector <uint32_t> ports;
 		std::vector <endlineoption> endlines;
@@ -56,7 +56,6 @@
 
 		bool showTimestamps = true;
 		bool echoCommands = true;
-		//bool portWasChanged = false;
 
 		bool viewHistory = false;
 		bool useNewline = true;
@@ -64,7 +63,7 @@
 	};
 
 	//	ini gui
-	void uiInit(HWND* appwnd, uiElements* ui, uiData* data);
+	void uiInit(HWND* appwnd, uiElements* ui, appData* data);
 
 	//	set bombobox items
 	void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase);
@@ -76,12 +75,14 @@
 	void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata);
 
 	//	update available ports
-	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
+	void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data);
 
 	//	print messages to a terminal
-	void printComm(uiElements* ui, uiData* data, std::string message, bool incoming, int printMode);
+	void printComm(uiElements* ui, appData* data, std::string message, bool incoming);
 
-	void updateStatusBar(maddsua::serial* serial, uiElements* ui, uiData* data);
+	void updateStatusBar(maddsua::serial* serial, uiElements* ui, appData* data);
+
+	void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data);
 
 
 #endif

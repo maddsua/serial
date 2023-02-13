@@ -3,7 +3,7 @@
 #include <fstream>
 #include <stdio.h>
 
-void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
+void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 
 	//	serial speeds dropdown
 	//	it isn't gonna be updated coz speeds are hardcoded to the library
@@ -44,7 +44,7 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
 		
 	//	input	
-	ui->cmdInput = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 568, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);
+	ui->command = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 568, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);
 	
 	//	buttons
 	ui->btnSend = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD | BS_BITMAP, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
@@ -128,7 +128,7 @@ void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 }
 
-void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
+void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data) {
 
 	auto portsList = serial->list();
 	std::vector <uint32_t> portsAvail;
@@ -177,31 +177,33 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 	}	
 }
 
-void printComm(uiElements* ui, uiData* data, std::string message, bool RX, int mode) {
+void printComm(uiElements* ui, appData* data, std::string message, bool incoming) {
 
-//	auto selectedPort = data->ports.at(data->sel_port);
-//	message.insert(message.begin(), getReadableTime.begin(), getReadableTime.end());
+	//	add port name and data direction
+	if (data->sel_port < data->ports.size()) {
+		auto portInfo = std::string("COM") + std::to_string(data->ports.at(data->sel_port)) + (incoming ? "  --->  " : "  <---  ");
+		message.insert(message.begin(), portInfo.begin(), portInfo.end());
+	}
 
-	auto getReadableTime = []() {
+	//	add timestamps
+	if (data->showTimestamps) {
 		char timebuff[32];
 		auto epoch = time(nullptr);
 		auto timedata = gmtime(&epoch);
 		strftime(timebuff, sizeof(timebuff), "[%H:%M:%S]  ", timedata);
-		return std::string(timebuff);
-	}();
+		message.insert(message.begin(), timebuff, timebuff + strlen(timebuff));
+	}
 
-	if (data->showTimestamps) message.insert(message.begin(), getReadableTime.begin(), getReadableTime.end());
+	if (!incoming) message += "\n";
 	
-	//	get contents length
+	//	remove old data from terminal if it's too big
 	size_t txtcontlen = SendMessage(ui->terminal, WM_GETTEXTLENGTH, 0, 0);
-	
-	//	erase some text if it's too big
 	if (txtcontlen > TERMINAL_MAX_TEXTLEN) {
 		//	select part of a text from the beginning
 		SendMessage(ui->terminal, EM_SETSEL, (WPARAM)0, (LPARAM)(TERMINAL_CUT_OVERFLOW));
 		//	erase it
 		SendMessage(ui->terminal, EM_REPLACESEL, 0, 0);
-		//	get contents length again
+		//	get new content length
 		txtcontlen = SendMessage(ui->terminal, WM_GETTEXTLENGTH, 0, 0);
 	}
 	
@@ -209,11 +211,11 @@ void printComm(uiElements* ui, uiData* data, std::string message, bool RX, int m
 	SendMessage(ui->terminal, EM_SETSEL, (WPARAM)txtcontlen, (LPARAM)txtcontlen);
 	//	paste new text
 	SendMessage(ui->terminal, EM_REPLACESEL, 0, (LPARAM)message.c_str());
-	//	save in log
+	//	save new text in the log
 	data->log.push_back(message);
 }
 
-void updateStatusBar(maddsua::serial* serial, uiElements* ui, uiData* data) {
+void updateStatusBar(maddsua::serial* serial, uiElements* ui, appData* data) {
 
 	//	exit if we can't access a port just yet
 	if (data->sel_port >= data->ports.size()) {
@@ -221,7 +223,30 @@ void updateStatusBar(maddsua::serial* serial, uiElements* ui, uiData* data) {
 		return;
 	}
 
-	auto selected = data->ports.at(data->sel_port);
-	auto statusString = std::string("COM") + std::to_string(selected) + " : " + serial->statusText(serial->info(selected).status);
+	auto port = data->ports.at(data->sel_port);
+	auto statusString = std::string("COM") + std::to_string(port) + " : " + serial->statusText(serial->info(port).status);
 	SetWindowTextA(ui->statusbar, statusString.c_str());
+}
+
+void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
+
+	char userinput[1024];
+	if (!GetWindowTextA(ui->command, userinput, sizeof(userinput))) return;
+
+	if (data->sel_port >= data->ports.size()) {
+		SetWindowTextA(ui->statusbar, "No active port selected!");
+		return;
+	}
+
+	auto port = data->ports.at(data->sel_port);
+	auto endline = data->endlines.at(data->sel_endline).bytes;
+
+	if (data->echoCommands) printComm(ui, data, userinput, false);
+
+	if (!serial->write(port, std::string(userinput) + endline)) {
+		SetWindowTextA(ui->statusbar, "Failed to send the message!");
+		return;
+	}
+
+	SetWindowText(ui->command, NULL);
 }

@@ -108,7 +108,7 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 
 	static uiElements ui;
-	static uiData data;
+	static appData data;
 		data.endlines = {
 			{"CR+LF", "\r\n"},
 			{"No endline", {/* empty line */}},
@@ -134,7 +134,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			SetTimer(hwnd, TIMER_PORTSLIST, TIMEOUT_PORTSLIST, NULL);
 
 			//	redirect keypress event for input form
-			mainevents = (WNDPROC)SetWindowLongPtr(ui.cmdInput, GWLP_WNDPROC, (LONG_PTR)keyboardEvents);
+			mainevents = (WNDPROC)SetWindowLongPtr(ui.command, GWLP_WNDPROC, (LONG_PTR)keyboardEvents);
 
 			break;
 		}
@@ -187,63 +187,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 					switch(LOWORD(wParam)) {
 												
 						//	send
-						case GUI_BTN_SEND: {
-							
-							data.viewHistory = false;
-							
-							//	get command trom input control
-							char userCommand[commsgbuff];
-							GetWindowTextA(ui.cmdInput, userCommand, commsgbuff);
-							
-							//	process command
-							if (strlen(userCommand) > 0) {
-								
-								//	add command to history
-								if (data.cmdHistory.size() > 0) {
-									
-									bool foundCmd = false;
-									int foundCmdIndex;
-									
-									for (int i = 0; i < data.cmdHistory.size(); i++) {
-										
-										if (userCommand == data.cmdHistory[i]) {
-											foundCmd = true;
-											foundCmdIndex = i;
-										}
-									}
-									
-									if (foundCmd) std::swap(data.cmdHistory[foundCmdIndex], data.cmdHistory[data.cmdHistory.size() - 1]);
-										else data.cmdHistory.push_back(userCommand);
-									
-								} else {
-									data.cmdHistory.push_back(userCommand);
-								}
-								
-								//	display command
-								if (data.useNewline) {
-									
-									//	add new line sign
-									strcat(userCommand, "\n");
-									
-									//	add port info
-									//char logtmp[comlogbuff];
-									//metalog(userCommand, data.ports[data.sel_port].c_str(), logtmp, true);
-									
-									//	display and write log
-									//log(ui.terminalwindow, logtmp);
-									//data.commLog.push_back(logtmp);
-								}
-								
-								//	copy command to output buffer
-								//strcpy(bufferOut, userCommand);
-								
-								//	clear command prompt
-								SetWindowText(ui.cmdInput, 0);
-							}
-							
-							break;
-						}
-
+						case GUI_BTN_SEND:
+							sendMessage(serial, &ui, &data);
+						break;
+						
 
 						//	checkboxes
 						case CHECKBOX_TIMESTAMP: 
@@ -272,11 +219,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							
 							//	clear log
 							data.log.clear();
-							
 							//	erase texts
-							SetWindowText(ui.cmdInput, NULL);
+							SetWindowText(ui.command, NULL);
 							SetWindowText(ui.terminal, NULL);
-
 							//	reset serial comms
 							serial->clearFocus();
 							
@@ -313,11 +258,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 									}
 								
 								//	paste cmd
-								SetWindowTextA(ui.cmdInput, data.cmdHistory[data.historyItem].c_str());
+								SetWindowTextA(ui.command, data.cmdHistory[data.historyItem].c_str());
 									
 								//	set text curcor position
-								int TextLen = SendMessage(ui.cmdInput, WM_GETTEXTLENGTH, 0, 0);
-								SendMessage(ui.cmdInput, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
+								int TextLen = SendMessage(ui.command, WM_GETTEXTLENGTH, 0, 0);
+								SendMessage(ui.command, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
 							}
 							
 							break;
@@ -332,7 +277,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		}
 		
 		case WM_SETFOCUS: 
-			SetFocus(ui.cmdInput);
+			SetFocus(ui.command);
 		break;
 		
 		case WM_TIMER: {
@@ -346,7 +291,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 				if (!input.size()) break;
 
-				printComm(&ui, &data, input, true, 0);
+				printComm(&ui, &data, input, true);
 
 			} else if (wParam == TIMER_PORTSLIST) {
 
