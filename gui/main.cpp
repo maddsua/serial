@@ -225,6 +225,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 						} break;
 
+						case MENUITEM_SPECCHARS: {
+							//	invert the state
+							data.specialCharsSupport = !data.specialCharsSupport;
+							checkMainMenuItem(&ui, MENUITEM_SPECCHARS, data.specialCharsSupport);
+						} break;
+
 						//	custom events
 						case KEYBOARD_ARROWS: {
 							historyRecall(&ui, &data, lParam);

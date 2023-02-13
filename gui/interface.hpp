@@ -73,6 +73,7 @@
 		bool echoInputs = true;
 		bool hexMode = false;
 		bool hexStyleFull = false;
+		bool specialCharsSupport = true;
 
 		bool viewHistory = false;
 		bool useNewline = true;
@@ -90,6 +91,7 @@
 	void displayAboutMessage();
 
 	void selectSubmenu_hexStyle(uiElements* ui, size_t selectID);
+	void checkMainMenuItem(uiElements* ui, size_t selectID, bool checked);
 
 
 #endif

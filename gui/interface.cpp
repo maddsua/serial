@@ -75,8 +75,9 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(1, 0));
 	}
 
-	//	get main menu and set it's stuff
+	//	setup main menu
 	selectSubmenu_hexStyle(ui, SUBMENU_HEXSTYLE_SHORT);
+	checkMainMenuItem(ui, MENUITEM_SPECCHARS, data->specialCharsSupport);
 }
 
 void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase) {
@@ -104,4 +105,7 @@ void displayAboutMessage() {
 
 void selectSubmenu_hexStyle(uiElements* ui, size_t selectID) {
 	CheckMenuRadioItem(ui->menu_hexStyle, SUBMENU_HEXSTYLE_SHORT, SUBMENU_HEXSTYLE_FULL, selectID, MF_BYCOMMAND);
+}
+void checkMainMenuItem(uiElements* ui, size_t selectID, bool checked) {
+	CheckMenuItem(ui->menu_main, selectID, checked ? MF_CHECKED : MF_UNCHECKED);
 }

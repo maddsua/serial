@@ -1,6 +1,7 @@
 #include "terminal.hpp"
 
 #include <fstream>
+
 #include <stdio.h>
 
 const uint8_t hex_table[16] = {
@@ -168,6 +169,10 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	char userinput[1024];
 	if (!GetWindowTextA(ui->command, userinput, sizeof(userinput))) return;
 
+	std::string message = userinput;
+
+	if (data->specialCharsSupport) restoreEscapedChars(&message);
+
 	//	check if there are ports
 	if (data->sel_port >= data->ports.size()) {
 		SetWindowTextA(ui->statusbar, "No active port selected!");
@@ -175,22 +180,22 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	}
 
 	//	echo to terminal
-	if (data->echoInputs) printComm(ui, data, userinput, false);
+	if (data->echoInputs) printComm(ui, data, message.c_str(), false);
 
 	//	command history stuff
 	for (auto itr = data->history.begin(); itr != data->history.end(); itr++) {
-		if ((*itr) == userinput) {
+		if ((*itr) == message) {
 			data->history.erase(itr);
 			break;
 		}
 	}
-	data->history.push_back(userinput);
+	data->history.push_back(message);
 	data->sel_history = data->history.size() ? (data->history.size() - 1) : 0;
 
 	//	write data to com port
 	auto port = data->ports.at(data->sel_port);
 	auto endline = data->endlines.at(data->sel_endline).bytes;
-	if (!serial->write(port, std::string(userinput) + endline)) {
+	if (!serial->write(port, std::string(message) + endline)) {
 		SetWindowTextA(ui->statusbar, "Failed to send the message!");
 		return;
 	}
@@ -201,9 +206,14 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 
 void historyRecall(uiElements* ui, appData* data, int direction) {
 
+	printf("direction %i, selected: %i\n", direction, data->sel_history);
+
+	if (!data->history.size()) return;
+
 	//	move history cursor
-	if ((data->sel_history + direction) < data->history.size())
-		data->sel_history += direction;
+	auto nextIndex = data->sel_history + direction;
+	if (nextIndex == UINT64_MAX) data->sel_history = data->history.size() - 1;
+	else if (nextIndex > data->history.size()) data->sel_history = 0;
 
 	//	insert text
 	SetWindowTextA(ui->command, data->history.at(data->sel_history).c_str());
@@ -211,4 +221,40 @@ void historyRecall(uiElements* ui, appData* data, int direction) {
 	//	move text cursor to the end
 	auto textLen = SendMessage(ui->command, WM_GETTEXTLENGTH, 0, 0);
 	SendMessage(ui->command, EM_SETSEL, (WPARAM)textLen, (LPARAM)textLen);
+}
+
+struct unescape {
+	char front;
+	char escape;
+};
+
+const std::vector <unescape> escapedCharsTable = {
+	{'n', '\n'},
+	{'r', '\r'},
+	{'t', '\t'},
+	{'b', '\b'}
+};
+
+void restoreEscapedChars(std::string* text) {
+
+	for (size_t i = 0; i < text->size(); i++) {
+
+		char escapechar = 0;
+
+		for (auto item : escapedCharsTable) {
+			if (text->at(i) == item.front) {
+				escapechar = item.escape;
+				break;
+			}
+		}
+
+		if (i >= 2 && (escapechar && text->at(i - 1) == '\\')) {
+			if (i >= 3 && text->at(i - 2) == '\\') {
+				text->erase(i - 2, 1);
+				continue;
+			}
+			text->replace(text->begin() + (i - 1), text->begin() + (i + 1), std::string(1, escapechar));
+			i -= 2;
+		}
+	}
 }
