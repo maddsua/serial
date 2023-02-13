@@ -37,4 +37,6 @@
 
 	void restoreEscapedChars(std::string* text);
 
+	void resetCommandPrompt(uiElements* ui, appData* data);
+
 #endif
