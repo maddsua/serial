@@ -65,7 +65,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	while (GetMessage(&msg, NULL, 0, 0)) {
 	
 		// skip msg translation to prevent sound	
-		if (msg.wParam != VK_RETURN)
+		if (msg.wParam != VK_RETURN && msg.wParam != VK_ESCAPE)
 			TranslateMessage(&msg);
 
 		DispatchMessage(&msg);
@@ -235,6 +235,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case KEYBOARD_ARROWS: {
 							historyRecall(&ui, &data, lParam);
 						} break;
+
+						case KEYBOARD_ESCAPE: {
+							resetCommandPrompt(&ui, &data);
+						} break;
 					}
 					
 				} break;
@@ -315,6 +319,8 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 				case VK_UP: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_FORWARD);
 
 				case VK_DOWN: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_BACKWARD);
+
+				case VK_ESCAPE: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ESCAPE, 0);
 			
 				default: break;
 			}
