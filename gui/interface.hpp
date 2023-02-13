@@ -60,9 +60,6 @@
 		std::vector <std::string> log;
 		std::vector <std::string> history;
 
-		std::string buffIn;
-		std::string buffOut;
-
 		size_t sel_speed = 0;
 		size_t sel_port = 0;
 		size_t sel_endline = 0;
@@ -75,9 +72,7 @@
 		bool hexStyleFull = false;
 		bool specialCharsSupport = true;
 
-		bool viewHistory = false;
-		bool useNewline = true;
-		bool isExtended = false;
+		bool historyOpen = false;
 	};
 	
 
@@ -92,6 +87,9 @@
 
 	void selectSubmenu_hexStyle(uiElements* ui, size_t selectID);
 	void checkMainMenuItem(uiElements* ui, size_t selectID, bool checked);
+
+	void historyRecall(uiElements* ui, appData* data, int step);
+	void resetCommandPrompt(uiElements* ui, appData* data);
 
 
 #endif

@@ -31,12 +31,9 @@
 
 	void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data);
 
-	void historyRecall(uiElements* ui, appData* data, int step);
-
 	std::string bytesToHex(std::string bytes, bool fullStyle);
 
 	void restoreEscapedChars(std::string* text);
 
-	void resetCommandPrompt(uiElements* ui, appData* data);
 
 #endif

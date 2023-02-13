@@ -109,3 +109,31 @@ void selectSubmenu_hexStyle(uiElements* ui, size_t selectID) {
 void checkMainMenuItem(uiElements* ui, size_t selectID, bool checked) {
 	CheckMenuItem(ui->menu_main, selectID, checked ? MF_CHECKED : MF_UNCHECKED);
 }
+
+void historyRecall(uiElements* ui, appData* data, int direction) {
+
+	if (!data->history.size()) return;
+
+	//	move history cursor
+	if (data->historyOpen) {
+		auto nextIndex = data->sel_history + direction;
+		if (nextIndex == UINT64_MAX) data->sel_history = data->history.size() - 1;
+			else if (nextIndex >= data->history.size()) data->sel_history = 0;
+				else data->sel_history = nextIndex;
+	}
+
+	data->historyOpen = true;
+
+	//	insert text
+	SetWindowTextA(ui->command, data->history.at(data->sel_history).c_str());
+
+	//	move text cursor to the end
+	auto textLen = SendMessage(ui->command, WM_GETTEXTLENGTH, 0, 0);
+	SendMessage(ui->command, EM_SETSEL, (WPARAM)textLen, (LPARAM)textLen);
+}
+
+void resetCommandPrompt(uiElements* ui, appData* data) {
+	data->sel_history = data->history.size() ? (data->history.size() - 1) : 0;
+	data->historyOpen = false;
+	SetWindowText(ui->command, NULL);
+}

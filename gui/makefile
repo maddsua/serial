@@ -1,7 +1,7 @@
 
 APP        = SerialTerminal.exe
 OBJECTS    = app.res terminal.o interface.o ../lib/serial.o
-FLAGS      = -std=c++20 -g
+FLAGS      = -std=c++20
 LIBS       = -lgdi32 -lcomdlg32 -lwinmm
 # -L"../lib" -lserialapi
 #-mwindows
