@@ -79,6 +79,7 @@ namespace maddsua {
 
 			std::vector <portEntryInfo> stats();
 			portEntryInfo stats(uint32_t comport);
+			std::string statusText(int32_t statusCode);
 
 			bool write(uint32_t comport, std::string data);
 			bool write(portEntry& entry, std::string data);

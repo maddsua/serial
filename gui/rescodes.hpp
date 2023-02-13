@@ -3,6 +3,7 @@
 
 
 	//	gui
+	#define GUI_STATUSBAR		(10)
 	#define GUI_LOGWIN			(11)
 	#define GUI_COMPROM			(12)
 	#define GUI_COMBO_PORT		(13)

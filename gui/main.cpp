@@ -370,6 +370,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			} else if (wParam == TIMER_PORTSLIST) {
 
 				updateComPorts(serial, &ui, &data);
+
+				//	exit if we can't access a port just yet
+				if (data.sel_port >= data.ports.size()) break;
+
+				auto status = serial->stats(data.ports[data.sel_port]);
 			}
 
 			break;

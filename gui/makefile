@@ -21,7 +21,7 @@ run: run-custom
 	$(APP)
 
 
-$(APP): main.o $(OBJECTS)
+$(APP): main.o $(OBJECTS) rescodes.hpp
 	g++ main.o $(OBJECTS) $(LIBS) $(FLAGS) -o $(APP)
 
 terminal.o: terminal.cpp

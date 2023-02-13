@@ -51,6 +51,7 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	{
 		HBITMAP	image_send = LoadBitmap(GetModuleHandle(nullptr), MAKEINTRESOURCE(ICON_BUTTON_SEND));
 			if (image_send) SendMessage(ui->btnSend, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)image_send);
+			else printf("didn't load: %i\n", GetLastError());
 	}
 		
 	//	checkboxes
@@ -59,6 +60,9 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	
 	ui->echoCommands = CreateWindowA(WC_BUTTONA, "Echo commands", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 125, 10, 105, 16, *appwnd, (HMENU)CHECKBOX_ECHOCMD, NULL, NULL);
 	SendMessageW(ui->echoCommands, BM_SETCHECK, BST_CHECKED, 0);
+
+	//	status bar
+	ui->statusbar = CreateWindowA(STATUSCLASSNAMEA, "(PCTSTR) NULL", WS_CHILD | WS_VISIBLE, 0, 460, 480, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
 
 	//	set font
 	for (int i = GUI_LOGWIN; i <= 1000; i++) {
@@ -213,4 +217,8 @@ void printComm(uiElements* ui, uiData* data, std::string message, bool RX, int m
 	SendMessage(ui->terminal, EM_REPLACESEL, 0, (LPARAM)message.c_str());
 	//	save in log
 	data->log.push_back(message);
+}
+
+void updateStatusBar(maddsua::serial* serial, uiElements* ui, uiData* data) {
+
 }

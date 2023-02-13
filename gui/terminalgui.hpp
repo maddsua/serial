@@ -20,13 +20,17 @@
 	struct uiElements {
 		HWND terminal;
 		HWND cmdInput;
+
 		HWND comboSpeed;
 		HWND comboPort;
 		HWND comboLine;
+
 		HWND btnSend;
-		HWND btnClear;
+
 		HWND timestamps;
 		HWND echoCommands;
+
+		HWND statusbar;
 	};
 
 	struct endlineoption {
@@ -79,6 +83,8 @@
 
 	//	print messages to a terminal
 	void printComm(uiElements* ui, uiData* data, std::string message, bool incoming, int printMode);
+
+	void updateStatusBar(maddsua::serial* serial, uiElements* ui, uiData* data);
 
 
 #endif

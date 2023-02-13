@@ -12,6 +12,31 @@ const std::array<uint32_t, 17> comSpeeds = {
 	56000, 57600, 115200, 128000
 };
 
+struct statustexts {
+	int32_t code;
+	std::string text;
+};
+
+const std::vector <statustexts> statuscodes = {
+	{ SPSTAT_ACTIVE, "Active" },
+	{ SPSTAT_AVAILABLE, "Available" },
+	{ SPSTAT_BUSY, "Busy" },
+	{ SPSTAT_DISABLED, "Disabled" },
+	{ SPSTAT_DISCONN, "Disconnected" },
+	{ SPSTAT_IGNORED, "Ignored" },
+	{ SPSTAT_IOERROR, "IO Error" },
+	{ SPSTAT_SETPERR, "Setup Error" },
+};
+
+std::string maddsua::serial::statusText(int32_t statusCode) {
+
+	for (auto item : statuscodes) {
+		if (item.code == statusCode) return item.text;
+	}
+
+	return "Unknown";
+}
+
 
 /*
      ██████ ██       █████  ███████ ███████ 
