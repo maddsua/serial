@@ -328,7 +328,7 @@ std::string maddsua::serial::read(portEntry& entry) {
     ██ ██   ████ ██       ██████  
 */
 
-maddsua::serial::portEntryInfo maddsua::serial::stats(uint32_t comport) {
+maddsua::serial::portEntryInfo maddsua::serial::info(uint32_t comport) {
 
 	for (auto& entry : pool) {
 		if (entry.port == comport) {
@@ -355,7 +355,7 @@ maddsua::serial::portEntryInfo maddsua::serial::stats(portEntry& entry) {
 	return temp;
 }
 
-std::vector <maddsua::serial::portEntryInfo> maddsua::serial::stats() {
+std::vector <maddsua::serial::portEntryInfo> maddsua::serial::list() {
 
 	std::vector <portEntryInfo> result;
 

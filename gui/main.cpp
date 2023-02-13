@@ -117,6 +117,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		};
 
 	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
+
+	static HBRUSH hbrBkgnd = 0;
 	
 	switch(Message) {
 			
@@ -155,7 +157,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							//	assing port
 							data.sel_port = temp;
 							//	reset
-							resetComms(serial, &ui, &data);
+							serial->clearFocus();
 														
 							break;
 						}
@@ -170,7 +172,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							//	apply new speed
 							data.sel_speed = temp;
 							serial->setSpeed(data.speeds.at(data.sel_speed));
-							resetComms(serial, &ui, &data);
+							serial->clearFocus();
 
 							break;
 						}
@@ -272,11 +274,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							data.log.clear();
 							
 							//	erase texts
-							SetWindowText(ui.cmdInput, 0);
-							SetWindowText(ui.terminal, 0);
+							SetWindowText(ui.cmdInput, NULL);
+							SetWindowText(ui.terminal, NULL);
 
 							//	reset serial comms
-							resetComms(serial, &ui, &data);
+							serial->clearFocus();
 							
 							break;
 						}
@@ -340,41 +342,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 				//	exit if we can't access a port just yet
 				if (data.sel_port >= data.ports.size()) break;
 
-				auto input = serial->read(data.ports[data.sel_port]);
+				auto input = serial->read(data.ports.at(data.sel_port));
 
 				if (!input.size()) break;
 
 				printComm(&ui, &data, input, true, 0);
 
-				/*switch (data.commstat) {
-					case 2:
-						log(ui.terminalwindow, "___ Port is not connected ___\n");
-					break;
-
-					case 3:
-						log(ui.terminalwindow, "___ Port busy ___\n");
-					break;
-
-					case 4:
-						log(ui.terminalwindow, "___ Port config error ___\n");
-					break;
-
-					case 6:
-						log(ui.terminalwindow, "___ Port has been disconnected ___\n");
-					break;
-				
-					default:
-					break;
-				}*/
-
 			} else if (wParam == TIMER_PORTSLIST) {
 
 				updateComPorts(serial, &ui, &data);
-
-				//	exit if we can't access a port just yet
-				if (data.sel_port >= data.ports.size()) break;
-
-				auto status = serial->stats(data.ports[data.sel_port]);
+				updateStatusBar(serial, &ui, &data);
 			}
 
 			break;
@@ -387,6 +364,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 			break;
 		}
+
+		/*case WM_CTLCOLORSTATIC: {
+			HDC hdcStatic = (HDC) wParam;
+			SetTextColor(hdcStatic, RGB(255,255,255));
+			SetBkColor(hdcStatic, RGB(0,0,0));
+
+			if (hbrBkgnd == NULL) hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
+
+			return (INT_PTR)hbrBkgnd;
+		}*/
 		
 		
 		default:

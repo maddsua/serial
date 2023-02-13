@@ -77,8 +77,8 @@ namespace maddsua {
 			std::vector <uint32_t> getSpeeds();
 			bool setSpeed(uint32_t baudrate);
 
-			std::vector <portEntryInfo> stats();
-			portEntryInfo stats(uint32_t comport);
+			std::vector <portEntryInfo> list();
+			portEntryInfo info(uint32_t comport);
 			std::string statusText(int32_t statusCode);
 
 			bool write(uint32_t comport, std::string data);

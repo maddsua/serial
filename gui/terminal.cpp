@@ -49,7 +49,7 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	//	buttons
 	ui->btnSend = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD | BS_BITMAP, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
 	{
-		HBITMAP	image_send = LoadBitmap(GetModuleHandle(nullptr), MAKEINTRESOURCE(ICON_BUTTON_SEND));
+		HBITMAP	image_send = LoadBitmap(GetModuleHandle(0), MAKEINTRESOURCE(ICON_BUTTON_SEND));
 			if (image_send) SendMessage(ui->btnSend, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)image_send);
 			else printf("didn't load: %i\n", GetLastError());
 	}
@@ -62,10 +62,10 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	SendMessageW(ui->echoCommands, BM_SETCHECK, BST_CHECKED, 0);
 
 	//	status bar
-	ui->statusbar = CreateWindowA(STATUSCLASSNAMEA, "(PCTSTR) NULL", WS_CHILD | WS_VISIBLE, 0, 460, 480, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
+	ui->statusbar = CreateWindowA(WC_STATICA, "Starting up...", WS_VISIBLE | WS_CHILD | SS_LEFT, 5, 410, 200, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
 
 	//	set font
-	for (int i = GUI_LOGWIN; i <= 1000; i++) {
+	for (size_t i = 0; i <= 1000; i++) {
 		if (!GetDlgItem(*appwnd, i)) continue;
 		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(1, 0));
 	}
@@ -128,18 +128,9 @@ void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 }
 
-void resetComms(maddsua::serial* serial, uiElements* ui, uiData* data) {
-	//	clear log
-	data->log.clear();
-	//	clear terminal window
-	SetWindowText(ui->terminal, NULL);
-	//	reset connected ports
-	serial->clearFocus();
-}
-
 void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 
-	auto portsList = serial->stats();
+	auto portsList = serial->list();
 	std::vector <uint32_t> portsAvail;
 	
 
@@ -178,7 +169,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 	//	check if selected port is connected
 	if (data->sel_port < data->ports.size()) {
 
-		auto entry = serial->stats(data->ports.at(data->sel_port));
+		auto entry = serial->info(data->ports.at(data->sel_port));
 
 		if (!entry.focus) {
 			auto res = serial->setFocus(entry.port);
@@ -187,6 +178,9 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 }
 
 void printComm(uiElements* ui, uiData* data, std::string message, bool RX, int mode) {
+
+//	auto selectedPort = data->ports.at(data->sel_port);
+//	message.insert(message.begin(), getReadableTime.begin(), getReadableTime.end());
 
 	auto getReadableTime = []() {
 		char timebuff[32];
@@ -221,4 +215,13 @@ void printComm(uiElements* ui, uiData* data, std::string message, bool RX, int m
 
 void updateStatusBar(maddsua::serial* serial, uiElements* ui, uiData* data) {
 
+	//	exit if we can't access a port just yet
+	if (data->sel_port >= data->ports.size()) {
+		SetWindowTextA(ui->statusbar, "Terminal ready");
+		return;
+	}
+
+	auto selected = data->ports.at(data->sel_port);
+	auto statusString = std::string("COM") + std::to_string(selected) + " : " + serial->statusText(serial->info(selected).status);
+	SetWindowTextA(ui->statusbar, statusString.c_str());
 }

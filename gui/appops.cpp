@@ -13,7 +13,7 @@
 #include "app.hpp"
 
 
-void metalog(const char* input, const char* port, char* result, bool isInput){
+void metalog(const char* input, const char* port, char* result, bool isInput) {
 
 	strcpy(result, port);
 	

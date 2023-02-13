@@ -46,7 +46,7 @@ int main() {
 
 	while (true) {
 
-		auto stats = serial->stats();
+		auto stats = serial->list();
 
 		for (auto entry : stats) {
 			std::cout << entry.port << ":" << entry.status << std::endl;

@@ -78,9 +78,6 @@
 	//	update available ports
 	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
 
-	//	reset communacations
-	void resetComms(maddsua::serial* serial, uiElements* ui, uiData* data);
-
 	//	print messages to a terminal
 	void printComm(uiElements* ui, uiData* data, std::string message, bool incoming, int printMode);
 

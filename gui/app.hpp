@@ -6,6 +6,7 @@
 #ifndef _SERIALTERMINAL
 #define _SERIALTERMINAL
 
+	#include <stdint.h>
 	#include <vector>
 	#include <string>
 	#include <windows.h>
