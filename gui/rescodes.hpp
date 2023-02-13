@@ -26,7 +26,7 @@
 	#define ICON_BUTTON_SEND	(3001)
 
 	//	custom events
-	#define ICEV_CMDLIST		(5001)
+	#define KBEV_HISTORY		(5001)
 
 	//	timers
 	#define TIMER_PORTSLIST		(10001)

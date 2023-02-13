@@ -75,36 +75,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 }
 
 
-//	-------		input form enter key press
-LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	
-	//	enter key press
-	if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-		return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BTN_SEND, 0);
-	
-	//	ctrl+A shortcut
-	} else if (msg == WM_CHAR && wParam == 1) {
-		SendMessage(wnd, EM_SETSEL, 0, -1);
-		return 0;
-	}
-	
-	//	up/down arrows for cmd history
-	else if (msg == WM_KEYDOWN && wParam == VK_UP) {
-		return CallWindowProc(WndProc, wnd, WM_COMMAND, ICEV_CMDLIST, (LPARAM)0);
-
-	} else if (msg == WM_KEYDOWN && wParam == VK_DOWN) {
-		return CallWindowProc(WndProc, wnd, WM_COMMAND, ICEV_CMDLIST, (LPARAM)1);
-	}
-	
-	//	other
-	else return CallWindowProc(mainevents, wnd, msg, wParam, lParam);
-
-   return 0;
-}
-
-
-
-//	-------		app itself
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 
 	static uiElements ui;
@@ -232,41 +202,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 
 						//	custom events
-						case ICEV_CMDLIST: {
-							
-							if (data.cmdHistory.size() > 0) {
-							
-								//	open history of scroll trough it
-								if (!data.viewHistory) {
-									
-									data.historyItem = data.cmdHistory.size() - 1;
-									data.viewHistory = true;
-								} else{
-								
-									if (lParam == 0) {
-										data.historyItem--;
-									}
-									else{
-										data.historyItem++;
-									}
-								}
-								
-									//	set index in range
-									if (data.historyItem < 0) {
-										data.historyItem = 0;
+						case KBEV_HISTORY: {
 
-									} else if (data.historyItem >= data.cmdHistory.size()) {
-										data.historyItem = data.cmdHistory.size() - 1;
-									}
-								
-								//	paste cmd
-								SetWindowTextA(ui.command, data.cmdHistory[data.historyItem].c_str());
-									
-								//	set text curcor position
-								int TextLen = SendMessage(ui.command, WM_GETTEXTLENGTH, 0, 0);
-								SendMessage(ui.command, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
-							}
-							
+							printf("Direction: %i\n", lParam);
+														
 						} break;
 					}
 					
@@ -287,9 +226,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 					//	exit if we can't access a port just yet
 					if (data.sel_port >= data.ports.size()) break;
-
+					
 					auto input = serial->read(data.ports.at(data.sel_port));
-
 					if (!input.size()) break;
 
 					printComm(&ui, &data, input, true);
@@ -332,4 +270,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	}
 
 	return 0;
+}
+
+
+LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	switch (msg) {
+
+		case WM_KEYDOWN: {
+
+			switch (wParam) {
+
+				case VK_RETURN: return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BTN_SEND, 0);
+
+				case VK_UP: return CallWindowProc(WndProc, wnd, WM_COMMAND, KBEV_HISTORY, (LPARAM)HISTORY_FORWARD);
+
+				case VK_DOWN: return CallWindowProc(WndProc, wnd, WM_COMMAND, KBEV_HISTORY, (LPARAM)HISTORY_BACKWARD);
+			
+				default: break;
+			}
+
+		} break;
+
+		case WM_CHAR: {
+			
+			switch (wParam) {
+
+				case 1: {
+					SendMessage(wnd, EM_SETSEL, 0, -1);
+				} break;
+			
+				default: break;
+			}
+
+		} break;
+	
+		default: break;
+	}
+	
+   return CallWindowProc(mainevents, wnd, msg, wParam, lParam);
 }

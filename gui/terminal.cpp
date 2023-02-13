@@ -238,6 +238,15 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 		return;
 	}
 
+	for (auto itr = data->history.begin(); itr != data->history.end(); itr++) {
+		if ((*itr) == userinput) {
+			data->history.erase(itr);
+			break;
+		}
+	}
+
+	data->history.push_back(userinput);
+
 	auto port = data->ports.at(data->sel_port);
 	auto endline = data->endlines.at(data->sel_endline).bytes;
 

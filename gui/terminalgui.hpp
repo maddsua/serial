@@ -6,6 +6,7 @@
 	#include <CommCtrl.h>
 
 	#include <vector>
+	#include <list>
 	#include <string>
 	#include <algorithm>
 
@@ -16,6 +17,9 @@
 
 	#define TERMINAL_MAX_TEXTLEN	(28000)
 	#define TERMINAL_CUT_OVERFLOW	(1000)
+
+	#define HISTORY_FORWARD			(1)
+	#define HISTORY_BACKWARD		(-1)
 
 	struct uiElements {
 		HWND terminal;
@@ -44,7 +48,7 @@
 		std::vector <endlineoption> endlines;
 
 		std::vector <std::string> log;
-		std::vector <std::string> cmdHistory;
+		std::list <std::string> history;
 
 		std::string buffIn;
 		std::string buffOut;
