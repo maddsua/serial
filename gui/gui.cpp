@@ -8,7 +8,7 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	//	serial speeds dropdown
 	//	it isn't gonna be updated coz speeds are hardcoded to the library
 	//	so render it only once and then just use as intended
-	ui->comboSpeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
+	ui->combo_speed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
 	{
 		std::vector <std::string> temp;
 
@@ -18,48 +18,51 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 
 		//	select 9600, bc it's the default
 		for (size_t i = 1; i < data->speeds.size(); i++) {
-			if (data->speeds.at(i) == SIO_DEFAULT_SPEED) {
+			if (data->speeds.at(i) == IO_DEFAULT_SPEED) {
 				data->sel_speed = i;
 				break;
 			}
 		}
 
-		dropdown(&ui->comboSpeed, &temp, data->sel_speed, false);
+		dropdown(&ui->combo_speed, &temp, data->sel_speed, false);
 	}
 
 	//	port selector
 	//	the items are gonna be assigned by the update timer callback
 	//	so gonna leave it empty for now
-	ui->comboPort = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
+	ui->combo_port = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
 
 	//	line ending selector
-	ui->comboLineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
+	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
 	{
 		std::vector <std::string> temp;
 		for (auto item : data->endlines) temp.push_back(item.title);
-		dropdown(&ui->comboLineEnding, &temp, data->sel_endline, false);
+		dropdown(&ui->combo_lineEnding, &temp, data->sel_endline, false);
 	}
 
 	//	terminal window itself
 	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
 		
-	//	input	
+	//	text input field	
 	ui->command = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 568, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);
 	
-	//	buttons
-	ui->btnSend = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD | BS_BITMAP, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
+	//	send button
+	ui->button_send = CreateWindowA(WC_STATICA, NULL, WS_VISIBLE | WS_CHILD | SS_BITMAP | SS_NOTIFY, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
 	{
-		HBITMAP	image_send = LoadBitmap(GetModuleHandle(0), MAKEINTRESOURCE(ICON_BUTTON_SEND));
-			if (image_send) SendMessage(ui->btnSend, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)image_send);
+		HBITMAP	image_send = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(ICON_BUTTON_SEND));
+			if (image_send) SendMessage(ui->button_send, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)image_send);
 			else printf("didn't load: %i\n", GetLastError());
 	}
-		
+
 	//	checkboxes
-	ui->timestamps = CreateWindowA(WC_BUTTONA, "Show timestamps", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 110, 16, *appwnd, (HMENU)CHECKBOX_TIMESTAMP, NULL, NULL);
-	SendMessageW(ui->timestamps, BM_SETCHECK, BST_CHECKED, 0);
+	ui->check_time = CreateWindowA(WC_BUTTONA, "Show time stamps", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 110, 16, *appwnd, (HMENU)CHECKBOX_TIMESTAMP, NULL, NULL);
+	SendMessageA(ui->check_time, BM_SETCHECK, data->showTimestamps, 0);
 	
-	ui->echoCommands = CreateWindowA(WC_BUTTONA, "Echo commands", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 125, 10, 105, 16, *appwnd, (HMENU)CHECKBOX_ECHOCMD, NULL, NULL);
-	SendMessageW(ui->echoCommands, BM_SETCHECK, BST_CHECKED, 0);
+	ui->check_echo = CreateWindowA(WC_BUTTONA, "Echo commands", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 125, 10, 105, 16, *appwnd, (HMENU)CHECKBOX_ECHOCMD, NULL, NULL);
+	SendMessageA(ui->check_echo, BM_SETCHECK, data->echoInputs, 0);
+
+	ui->check_textmode = CreateWindowA(WC_BUTTONA, "Text mode", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 235, 10, 75, 16, *appwnd, (HMENU)CHECKBOX_TEXTMODE, NULL, NULL);
+	SendMessageA(ui->check_textmode, BM_SETCHECK, data->textmode, 0);
 
 	//	status bar
 	ui->statusbar = CreateWindowA(WC_STATICA, "Starting up...", WS_VISIBLE | WS_CHILD | SS_LEFT, 5, 410, 200, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);

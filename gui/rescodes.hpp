@@ -15,6 +15,7 @@
 	#define GUI_CHK_QKAT		(20)
 	#define CHECKBOX_TIMESTAMP	(100)
 	#define CHECKBOX_ECHOCMD	(101)
+	#define CHECKBOX_TEXTMODE	(102)
 
 	//	context menus
 	#define CONTEXT_FILE_SVLOG	(2001)

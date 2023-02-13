@@ -24,14 +24,15 @@
 		HWND terminal;
 		HWND command;
 
-		HWND comboSpeed;
-		HWND comboPort;
-		HWND comboLineEnding;
+		HWND combo_speed;
+		HWND combo_port;
+		HWND combo_lineEnding;
 
-		HWND btnSend;
+		HWND button_send;
 
-		HWND timestamps;
-		HWND echoCommands;
+		HWND check_time;
+		HWND check_echo;
+		HWND check_textmode;
 
 		HWND statusbar;
 	};
@@ -59,7 +60,8 @@
 		size_t historyItem = 0;
 
 		bool showTimestamps = true;
-		bool echoCommands = true;
+		bool echoInputs = true;
+		bool textmode = true;
 
 		bool viewHistory = false;
 		bool useNewline = true;

@@ -72,7 +72,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data) {
 			dropitems.push_back("COM" + std::to_string(item));
 
 		//	rerender dropdown
-		dropdown(&ui->comboPort, &dropitems, data->sel_port, true);
+		dropdown(&ui->combo_port, &dropitems, data->sel_port, true);
 	}
 
 	//	check if selected port is connected
@@ -150,7 +150,7 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	}
 
 	//	echo to terminal
-	if (data->echoCommands) printComm(ui, data, userinput, false);
+	if (data->echoInputs) printComm(ui, data, userinput, false);
 
 	//	command history stuff
 	for (auto itr = data->history.begin(); itr != data->history.end(); itr++) {

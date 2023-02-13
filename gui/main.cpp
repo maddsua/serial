@@ -42,7 +42,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wc.lpszMenuName  = "MAINMENU";
-	wc.lpszClassName = "*windowClass";
+	wc.lpszClassName = "terminalMainWindow";
 	wc.hIcon		 = LoadIconA(hInstance, "APPICON");
 	wc.hIconSm		 = LoadIconA(hInstance, "APPICON");
 
@@ -52,17 +52,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	//	calc window position (1/8 left; 1/10 top)
-    int winPosx = (GetSystemMetrics(SM_CXSCREEN) / 2) - (windowSizeX);
-    int winPosy = (GetSystemMetrics(SM_CYSCREEN) / 2) - (windowSizeY / 1.2);
+    auto winPosx = (GetSystemMetrics(SM_CXSCREEN) / 2) - (windowSizeX);
+    auto winPosy = (GetSystemMetrics(SM_CYSCREEN) / 2) - (windowSizeY / 1.2);
 
-	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "*windowClass", APP_NAME, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, winPosx, winPosy, windowSizeX, windowSizeY, NULL, NULL, hInstance, NULL);
+	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "terminalMainWindow", APP_TITLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, winPosx, winPosy, windowSizeX, windowSizeY, NULL, NULL, hInstance, NULL);
 
 	if (!hwnd) {
 		MessageBoxA(NULL, "Window Creation Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
 		return 2;
 	}
 
-	while (GetMessage(&msg, NULL, 0, 0) > 0) {
+	while (GetMessage(&msg, NULL, 0, 0)) {
 	
 		// skip msg translation to prevent sound	
 		if (msg.wParam != VK_RETURN)
@@ -121,7 +121,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case GUI_COMBO_PORT: {
 
 							//	select a different port
-							size_t temp = SendMessageW(ui.comboPort, CB_GETCURSEL, 0, 0);
+							size_t temp = SendMessageW(ui.combo_port, CB_GETCURSEL, 0, 0);
 							//	exit if it's the same
 							if (temp == data.sel_port) break;
 
@@ -135,7 +135,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case GUI_COMBO_SPEED: {
 
 							//	select different speed
-							size_t temp = SendMessageW(ui.comboSpeed, CB_GETCURSEL, 0, 0);	
+							size_t temp = SendMessageW(ui.combo_speed, CB_GETCURSEL, 0, 0);	
 							//	exit if it's the same
 							if (temp == data.sel_speed) break;
 
@@ -147,7 +147,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						} break;
 						
 						case GUI_COMBO_LINE: {
-							data.sel_endline = SendMessageW(ui.comboLineEnding, CB_GETCURSEL, 0, 0);
+							data.sel_endline = SendMessageW(ui.combo_lineEnding, CB_GETCURSEL, 0, 0);
 						} break;
 						
 					}
@@ -167,11 +167,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 						//	checkboxes
 						case CHECKBOX_TIMESTAMP: {
-							data.showTimestamps = SendMessageA(ui.timestamps, BM_GETCHECK, 0, 0);
+							data.showTimestamps = SendMessageA(ui.check_time, BM_GETCHECK, 0, 0);
 						} break;
 						
 						case CHECKBOX_ECHOCMD: {
-							data.echoCommands = SendMessageA(ui.echoCommands, BM_GETCHECK, 0, 0);
+							data.echoInputs = SendMessageA(ui.check_echo, BM_GETCHECK, 0, 0);
 						} break;
 						
 						
