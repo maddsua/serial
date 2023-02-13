@@ -14,6 +14,9 @@
 
 	#include "../lib/serial.hpp"
 
+	#define TERMINAL_MAX_TEXTLEN	(28000)
+	#define TERMINAL_CUT_OVERFLOW	(1000)
+
 	struct uiElements {
 		HWND terminal;
 		HWND cmdInput;
@@ -22,13 +25,8 @@
 		HWND comboLine;
 		HWND btnSend;
 		HWND btnClear;
-		HWND newlinecheck;
-		HWND extended;
-		
-		HWND atbtn_at;
-		HWND atbtn_id;
-		HWND atbtn_ok;
-		HWND atbtn_prefix;
+		HWND timestamps;
+		HWND echoCommands;
 	};
 
 	struct endlineoption {
@@ -52,18 +50,35 @@
 		size_t sel_endline = 0;
 		size_t historyItem = 0;
 
+		bool showTimestamps = true;
+		bool echoCommands = true;
+		//bool portWasChanged = false;
+
 		bool viewHistory = false;
 		bool useNewline = true;
 		bool isExtended = false;
 	};
 
+	//	ini gui
 	void uiInit(HWND* appwnd, uiElements* ui, uiData* data);
+
+	//	set bombobox items
 	void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase);
+
+	//	display About Message, captain obvious
 	void displayAboutMessage();
-	void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata);
+
+	//	save communacations log to a file
+	void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata);
+
+	//	update available ports
 	void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data);
+
+	//	reset communacations
 	void resetComms(maddsua::serial* serial, uiElements* ui, uiData* data);
-	void printComm(uiElements* ui, uiData* data, std::string* message, bool RX, int mode);
+
+	//	print messages to a terminal
+	void printComm(uiElements* ui, uiData* data, std::string message, bool incoming, int printMode);
 
 
 #endif

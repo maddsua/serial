@@ -128,7 +128,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 			uiInit(&hwnd, &ui, &data);
 			
-			SetTimer(hwnd, CYCLE_PRINT, TTOUT, NULL);
+			SetTimer(hwnd, TIMER_DATAREAD, TIMEOUT_DATAREAD, NULL);
 			SetTimer(hwnd, TIMER_PORTSLIST, TIMEOUT_PORTSLIST, NULL);
 
 			//	redirect keypress event for input form
@@ -179,26 +179,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 					break;
 				}
 				
+				//	buttons
 				case BN_CLICKED: {
 					
 					switch(LOWORD(wParam)) {
-						
-						case GUI_BTN_CLR: {
-							
-							//	clear log
-							data.log.clear();
-							
-							//	erase texts
-							SetWindowText(ui.cmdInput, 0);
-							SetWindowText(ui.terminal, 0);
-
-							//	reset serial comms
-							resetComms(serial, &ui, &data);
-							
-							break;
-						}
-						
-						//	send button
+												
+						//	send
 						case GUI_BTN_SEND: {
 							
 							data.viewHistory = false;
@@ -255,83 +241,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							
 							break;
 						}
-						
-						//	AT-buttons
-						case GUI_AT_PREF: {
-							
-							//	copy text to command prompt
-							SetWindowTextA(ui.cmdInput, "AT+");
-							
-							//	set focus
-							SetFocus(ui.cmdInput);
-							
-							//	set text curcor position
-							int TextLen = SendMessage(ui.cmdInput, WM_GETTEXTLENGTH, 0, 0);
-							SendMessage(ui.cmdInput, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
-							
-							break;
-						}
-						case GUI_AT_AT:{
-							
-							//quickcmd(ui.terminalwindow, "AT\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
-							break;
-						}	
-						case GUI_AT_OK:{
 
-							//quickcmd(ui.terminalwindow, "OK\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
-							break;
-						}
-						case GUI_AT_ID:{
 
-							//quickcmd(ui.terminalwindow, "AT+ID\n", data.useNewline, data.ports[data.sel_port].c_str(), &data.commLog, bufferOut);
-							break;
-						}
+						//	checkboxes
+						case CHECKBOX_TIMESTAMP: 
+							data.showTimestamps = SendMessageA(ui.timestamps, BM_GETCHECK, 0, 0);
+						break;
 						
-						//	checkboxes	
-						case GUI_CHK_NLN:{
-							
-							//	just get the flag
-							data.useNewline = (bool)SendMessageW(ui.newlinecheck, BM_GETCHECK, 0, 0);
-							break;
-						}
+						case CHECKBOX_ECHOCMD: 
+							data.echoCommands = SendMessageA(ui.echoCommands, BM_GETCHECK, 0, 0);
+						break;
 						
-						case GUI_CHK_QKAT: {
-							
-							unsigned short int showflag;
-							
-							if (data.isExtended) {
-								data.isExtended = false;
-								showflag = 0;
-
-							} else {
-								data.isExtended = true;
-								showflag = 1;
-							}
-							
-							//	draw extended controls
-							ShowWindow(ui.atbtn_prefix, showflag);
-							ShowWindow(ui.atbtn_ok, showflag);
-							ShowWindow(ui.atbtn_id, showflag);
-							ShowWindow(ui.atbtn_at, showflag);
-
-							break;
-						}
 						
-						//	menus
-						case CM_ABOUT:
+						//	context menus
+						case CONTEXT_ABOUT:
 							displayAboutMessage();
 						break;
 											
-						case CM_FILE_SVLOG: 
-							saveLogDialog(&hwnd, &data.log);
+						case CONTEXT_FILE_SVLOG: 
+							saveCommLog(&hwnd, &data.log);
 						break;
 						
-						
-						case CM_FILE_EXIT: 
+						case CONTEXT_FILE_EXIT: 
 							PostMessage(hwnd, WM_CLOSE, 0, 0);
 						break;
-						
-						
+
+						case CONTEXT_CLEAR: {
+							
+							//	clear log
+							data.log.clear();
+							
+							//	erase texts
+							SetWindowText(ui.cmdInput, 0);
+							SetWindowText(ui.terminal, 0);
+
+							//	reset serial comms
+							resetComms(serial, &ui, &data);
+							
+							break;
+						}
+
+
 						//	custom events
 						case ICEV_CMDLIST: {
 							
@@ -385,29 +335,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		
 		case WM_TIMER: {
 
-			if (wParam == CYCLE_PRINT) {
+			if (wParam == TIMER_DATAREAD) {
 
-				//	break if we can't access a port just yet
+				//	exit if we can't access a port just yet
 				if (data.sel_port >= data.ports.size()) break;
 
 				auto input = serial->read(data.ports[data.sel_port]);
 
 				if (!input.size()) break;
 
-				log(ui.terminal, input.c_str());
-
-				/*if ( strlen(bufferIn) > 0) {
-					
-					char logtmp[comlogbuff];
-					
-					if (data.useNewline) metalog(bufferIn, data.ports[data.sel_port].c_str(), logtmp, false);
-					else strcpy(logtmp, bufferIn);
-
-					log(ui.terminalwindow, logtmp);
-					data.commLog.push_back(logtmp);
-					
-					memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
-				}*/
+				printComm(&ui, &data, input, true, 0);
 
 				/*switch (data.commstat) {
 					case 2:
@@ -429,8 +366,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 					default:
 					break;
 				}*/
-
-				//data.commstat = 0;
 
 			} else if (wParam == TIMER_PORTSLIST) {
 

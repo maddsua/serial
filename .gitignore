@@ -6,3 +6,4 @@ build/
 *.res
 *.dll
 cli/data/headerString.txt
+gui/res/*.png

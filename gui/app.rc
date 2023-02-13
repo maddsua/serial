@@ -3,20 +3,23 @@
 
 #include "rescodes.hpp"
 
-APPICON ICON "../design/icon_gui.ico"
+APPICON				ICON	"../design/icon_gui.ico"
+ICON_BUTTON_SEND	BITMAP	"res/button-send.bmp"
 
 MAINMENU MENU{
 	
 	POPUP "&File"{
- 	
-		MENUITEM "&Save log", CM_FILE_SVLOG
+		MENUITEM "&Save log", CONTEXT_FILE_SVLOG
 		MENUITEM SEPARATOR
-		MENUITEM "&Exit", CM_FILE_EXIT
+		MENUITEM "&Exit", CONTEXT_FILE_EXIT
+	}
+
+	POPUP "&Terminal"{
+		MENUITEM "&Clear", CONTEXT_CLEAR
 	}
 
 	POPUP "&Help"{
-		
-		MENUITEM "&About", CM_ABOUT
+		MENUITEM "&About", CONTEXT_ABOUT
 	}
 }
 

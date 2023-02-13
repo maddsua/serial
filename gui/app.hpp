@@ -21,16 +21,15 @@
 	/*		internals		*/
 	#define windowSizeX				640
 	#define windowSizeY				480
-	//#define userinputBuffer			128
+	//#define userinputBuffer		128
 	//#define ascinumbShift			48
-	#define TTOUT					10
-	#define NNLTTOUT				50
+	//#define TTOUT					10
+	//#define NNLTTOUT				50
 	#define comlongmsg				128
 	#define commsgbuff				512
 	#define comlogbuff				640
 	#define atcomlen				32
-	#define CYCLE_PRINT				666
-	#define winapi_textedit_OVF		28000
+	//#define CYCLE_PRINT				666
 
 	/*		serial IO		*/
 	#define SIO_DEFAULT_SPEED		(9600)
@@ -48,8 +47,8 @@
 
 	//void serialIO(char* port, unsigned int speed, char* bufferIn, char* bufferOut, int* commstat, bool placeNewLine);
 
-	void log(HWND hEdit, LPCSTR newText);
-	void quickcmd(HWND term, const char* cmd, bool usenl,  const char* port, std::vector <std::string>* datalog, char* comm);
+	//void log(HWND hEdit, LPCSTR newText);
+	//void quickcmd(HWND term, const char* cmd, bool usenl,  const char* port, std::vector <std::string>* datalog, char* comm);
 	void metalog(const char* input, const char* port, char* result, bool isInput);
 	//void dropdown(HWND combo, char** items, unsigned int length, unsigned int focus, bool erase);
 	//void dropdown(HWND combo, std::vector <std::string>* items, size_t focus, bool erase);

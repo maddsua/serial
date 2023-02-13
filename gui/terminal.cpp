@@ -36,41 +36,35 @@ void uiInit(HWND* appwnd, uiElements* ui, uiData* data) {
 	ui->comboLine = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
 	{
 		std::vector <std::string> temp;
-
-		for (auto item : data->endlines) {
-			temp.push_back(item.title);
-		}
-
+		for (auto item : data->endlines) temp.push_back(item.title);
 		dropdown(&ui->comboLine, &temp, data->sel_endline, false);
 	}
-		
-	
-	//	terminal windwos itself
+
+	//	terminal window itself
 	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
 		
 	//	input	
-	ui->cmdInput = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
+	ui->cmdInput = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 568, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);
 	
 	//	buttons
-	ui->btnSend = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
-	
-	ui->btnClear = CreateWindowA(WC_BUTTONA, "Reset", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, *appwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
-	
+	ui->btnSend = CreateWindowA(WC_BUTTONA, "Send", WS_VISIBLE | WS_CHILD | BS_BITMAP, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
+	{
+		HBITMAP	image_send = LoadBitmap(GetModuleHandle(nullptr), MAKEINTRESOURCE(ICON_BUTTON_SEND));
+			if (image_send) SendMessage(ui->btnSend, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)image_send);
+	}
+		
 	//	checkboxes
-	ui->newlinecheck = CreateWindowA(WC_BUTTONA, "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, *appwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
-	SendMessageW(ui->newlinecheck, BM_SETCHECK, BST_CHECKED, 0);
+	ui->timestamps = CreateWindowA(WC_BUTTONA, "Show timestamps", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 110, 16, *appwnd, (HMENU)CHECKBOX_TIMESTAMP, NULL, NULL);
+	SendMessageW(ui->timestamps, BM_SETCHECK, BST_CHECKED, 0);
 	
-	ui->extended = CreateWindowA(WC_BUTTONA, "AT controls", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 100, 10, 75, 16, *appwnd, (HMENU)GUI_CHK_QKAT, NULL, NULL);
+	ui->echoCommands = CreateWindowA(WC_BUTTONA, "Echo commands", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 125, 10, 105, 16, *appwnd, (HMENU)CHECKBOX_ECHOCMD, NULL, NULL);
+	SendMessageW(ui->echoCommands, BM_SETCHECK, BST_CHECKED, 0);
 
-	//	AT-macro buttons
-	ui->atbtn_at = CreateWindowA(WC_BUTTONA, "AT", WS_CHILD, 10, 380, 80, 25, *appwnd, (HMENU)GUI_AT_AT, NULL, NULL);
-	ui->atbtn_id = CreateWindowA(WC_BUTTONA, "AT+ID", WS_CHILD, 95, 380, 80, 25, *appwnd, (HMENU)GUI_AT_ID, NULL, NULL);
-	ui->atbtn_ok = CreateWindowA(WC_BUTTONA, "OK", WS_CHILD, 180, 380, 80, 25, *appwnd, (HMENU)GUI_AT_OK, NULL, NULL);
-	ui->atbtn_prefix = CreateWindowA(WC_BUTTONA, "AT+", WS_CHILD, 265, 380, 80, 25, *appwnd, (HMENU)GUI_AT_PREF, NULL, NULL);
-	
 	//	set font
-	for (int i = GUI_LOGWIN; i <= GUI_AT_ID; i++)
-		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(TRUE,0));
+	for (int i = GUI_LOGWIN; i <= 1000; i++) {
+		if (!GetDlgItem(*appwnd, i)) continue;
+		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(1, 0));
+	}
 }
 
 void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase) {
@@ -80,12 +74,10 @@ void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool 
 		for (size_t i = 0; i < contlen; i++)
 			SendMessage(*combo, CB_DELETESTRING, 0, 0);
 	}
-	
-	for (int i = 0; i < items->size(); i++) {
-		std::string listPorts = items->at(i);
-		SendMessage(*combo, CB_ADDSTRING, 0, (LPARAM)listPorts.c_str());
-	}
 
+	for (auto entry : *items)
+		SendMessage(*combo, CB_ADDSTRING, 0, (LPARAM)entry.c_str());
+	
 	SendMessage(*combo, CB_SETCURSEL , focus, 0);
 }
 
@@ -98,7 +90,7 @@ void displayAboutMessage() {
 	MessageBoxA(NULL, msg.c_str(), "About...", 0);
 }
 
-void saveLogDialog(HWND* appwnd, std::vector <std::string>* logdata) {
+void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 	OPENFILENAMEA ofn;
 	memset(&ofn, 0, sizeof(ofn));
@@ -145,12 +137,6 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 
 	auto portsList = serial->stats();
 	std::vector <uint32_t> portsAvail;
-
-	//printf("Entries: %i\r\n", portsList.size());
-
-	/*for (size_t i = 0; i < portsList.size(); i++) {
-		printf("COM: %i : %i\r\n", portsList[i].port, portsList[i].status);
-	}*/
 	
 
 	for (auto entry : portsList) {
@@ -191,9 +177,40 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, uiData* data) {
 		auto entry = serial->stats(data->ports.at(data->sel_port));
 
 		if (!entry.focus) {
-			//printf("entry: %i\r\n", entry.port);
 			auto res = serial->setFocus(entry.port);
 		}
+	}	
+}
+
+void printComm(uiElements* ui, uiData* data, std::string message, bool RX, int mode) {
+
+	auto getReadableTime = []() {
+		char timebuff[32];
+		auto epoch = time(nullptr);
+		auto timedata = gmtime(&epoch);
+		strftime(timebuff, sizeof(timebuff), "[%H:%M:%S]  ", timedata);
+		return std::string(timebuff);
+	}();
+
+	if (data->showTimestamps) message.insert(message.begin(), getReadableTime.begin(), getReadableTime.end());
+	
+	//	get contents length
+	size_t txtcontlen = SendMessage(ui->terminal, WM_GETTEXTLENGTH, 0, 0);
+	
+	//	erase some text if it's too big
+	if (txtcontlen > TERMINAL_MAX_TEXTLEN) {
+		//	select part of a text from the beginning
+		SendMessage(ui->terminal, EM_SETSEL, (WPARAM)0, (LPARAM)(TERMINAL_CUT_OVERFLOW));
+		//	erase it
+		SendMessage(ui->terminal, EM_REPLACESEL, 0, 0);
+		//	get contents length again
+		txtcontlen = SendMessage(ui->terminal, WM_GETTEXTLENGTH, 0, 0);
 	}
 	
+	//	move cusor to the end
+	SendMessage(ui->terminal, EM_SETSEL, (WPARAM)txtcontlen, (LPARAM)txtcontlen);
+	//	paste new text
+	SendMessage(ui->terminal, EM_REPLACESEL, 0, (LPARAM)message.c_str());
+	//	save in log
+	data->log.push_back(message);
 }
