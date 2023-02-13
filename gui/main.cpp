@@ -173,6 +173,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case CHECKBOX_ECHOCMD: {
 							data.echoInputs = SendMessageA(ui.check_echo, BM_GETCHECK, 0, 0);
 						} break;
+
+						case CHECKBOX_TEXTMODE : {
+							data.textmode = SendMessageA(ui.check_textmode, BM_GETCHECK, 0, 0);
+							serial->setmode(data.textmode);
+						} break;
 						
 						
 						//	context menus

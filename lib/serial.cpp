@@ -405,3 +405,7 @@ bool maddsua::serial::clearFocus() {
 
 	return false;
 }
+
+void maddsua::serial::setmode(bool isTextModeActive) {
+	textmode = isTextModeActive;
+}

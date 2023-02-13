@@ -89,7 +89,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data) {
 void printComm(uiElements* ui, appData* data, std::string message, bool incoming) {
 
 	//	add port name and data direction
-	if (data->sel_port < data->ports.size()) {
+	if (data->sel_port < data->ports.size() && data->textmode) {
 		auto portInfo = std::string("COM") + std::to_string(data->ports.at(data->sel_port)) + (incoming ? "  --->  " : "  <---  ");
 		message.insert(message.begin(), portInfo.begin(), portInfo.end());
 	}

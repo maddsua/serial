@@ -89,6 +89,8 @@ namespace maddsua {
 			bool setFocus(uint32_t comport);
 			bool clearFocus();
 
+			void setmode(bool isTextModeActive);
+
 		private:
 			int serialSpeed;
 			int activatePorts;
