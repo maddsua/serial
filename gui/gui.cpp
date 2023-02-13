@@ -30,10 +30,10 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	//	port selector
 	//	the items are gonna be assigned by the update timer callback
 	//	so gonna leave it empty for now
-	ui->combo_port = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
+	ui->combo_port = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 415, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
 
 	//	line ending selector
-	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 340, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
+	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 330, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
 	{
 		std::vector <std::string> temp;
 		for (auto item : data->endlines) temp.push_back(item.title);
