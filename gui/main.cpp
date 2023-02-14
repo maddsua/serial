@@ -7,11 +7,17 @@
 #include <windows.h>
 #include <CommCtrl.h>
 #include <stdio.h>
+#include <dir.h>
+#include <dirent.h>
 
 #include <thread>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <regex>
+
+#include <nlohmann/json.hpp>
+using JSON = nlohmann::json;
 
 #include "../lib/serial.hpp"
 
@@ -28,6 +34,8 @@ const std::vector <uint32_t> serialSpeeds = {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC mainevents;
+
+std::string preparePath(std::string tree);
 
 
 //	-------		main
@@ -356,4 +364,34 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}
 	
    return CallWindowProc(mainevents, wnd, msg, wParam, lParam);
+}
+
+std::string preparePath(std::string tree) {
+
+	tree = std::regex_replace(tree, std::regex("[\\\\\\/]+"), "\\");
+
+	std::string userdir = std::string(std::getenv("userprofile"));
+	if (!userdir.size()) userdir = std::getenv("%HOMEPATH%");
+
+	if (!userdir.size()) {
+		return {};
+	}
+
+	auto createIfDontexist = [](std::string path) {
+		auto dir = opendir(path.c_str());
+		if (dir) {
+			closedir(dir);
+			return true;
+		}
+		if (mkdir(path.c_str())) return false;
+		return true;
+	};
+
+	auto hierrarchy = tree.find_first_of('\\');
+	while(hierrarchy != std::string::npos) {
+		if (!createIfDontexist(userdir + tree.substr(0, hierrarchy))) return {};
+		hierrarchy = tree.find_first_of('\\', hierrarchy + 1);
+	}
+
+	return userdir + tree;
 }
