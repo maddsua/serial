@@ -414,7 +414,7 @@ bool saveConfiguration(appData* data) {
 	auto filepath = preparePath(CONFIG_SAVE_TREE);
 	if (!filepath.size()) return false;
 
-	std::ofstream configFile(filepath.c_str(), std::ios::out);
+	std::ofstream configFile(filepath.c_str(), std::ios::out | std::ios::binary);
 	if (!configFile.is_open()) return false;
 
 	JSON appconfig = {
@@ -441,7 +441,7 @@ bool loadConfiguration(appData* data) {
 	auto filepath = preparePath(CONFIG_SAVE_TREE);
 	if (!filepath.size()) return false;
 
-	std::ifstream configFile(filepath.c_str(), std::ios::in);
+	std::ifstream configFile(filepath.c_str(), std::ios::in | std::ios::binary);
 	if (!configFile.is_open()) return false;
 
 	try {

@@ -93,7 +93,7 @@ void saveCommLog(HWND* appwnd, std::vector <std::string>* logdata) {
 
 	if (!GetSaveFileNameA(&ofn)) return;
 
-	std::ofstream localFile(ofn.lpstrFile, std::ios::out);
+	std::ofstream localFile(ofn.lpstrFile, std::ios::out | std::ios::binary);
 
 	if (!localFile.is_open()) {
 		MessageBoxA(*appwnd, "Save file failed.", "Error", MB_OK | MB_ICONEXCLAMATION);
