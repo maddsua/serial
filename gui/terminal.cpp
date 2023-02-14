@@ -233,19 +233,23 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	data->history.push_back(userinput);
 
 	//	restore hex
-	std::string message = userinput;
-	if (data->hexMode) message = hexToBin(pickHexOnly(userinput));
+	std::string hexMessage;
+	if (data->hexMode) {
+		hexMessage = hexToBin(pickHexOnly(userinput));
+		if (!hexMessage.size()) {
+			SetWindowTextA(ui->statusbar, "Not in HEX format!");
+			return;
+		}
+	}
 
 	//	echo to terminal
-	if (data->echoInputs) printComm(ui, data, message, false);
+	if (data->echoInputs) printComm(ui, data, data->hexMode ? hexMessage : userinput, false);
 
 	//	write data to com port
 	auto port = data->ports.at(data->sel_port);
+	auto endline = data->endlines.at(data->sel_endline).bytes;
 
-	if (data->specialCharsSupport && !data->hexMode) restoreEscapedChars(&message);
-	if (!data->hexMode) message += data->endlines.at(data->sel_endline).bytes;
-
-	if (!serial->write(port, message)) {
+	if (!serial->write(port, data->hexMode ? hexMessage : (data->specialCharsSupport ? (std::string(userinput) + endline) : userinput))) {
 		SetWindowTextA(ui->statusbar, "Failed to send the message!");
 		return;
 	}
