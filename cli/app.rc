@@ -12,7 +12,7 @@ FILETYPE VFT_APP
 	{
 		BLOCK "040904E4"
 		{
-			VALUE "CompanyName", "maddsua"
+			VALUE "CompanyName", "maddsua/dev"
 			VALUE "FileVersion", "1.0.5"
 			VALUE "FileDescription", "Serial Terminal"
 			VALUE "InternalName", "SerialTerminal"

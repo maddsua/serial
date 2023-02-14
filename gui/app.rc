@@ -40,23 +40,23 @@ FILEVERSION 4,0,0
 PRODUCTVERSION 4,0,0
 FILETYPE VFT_APP
 {
-  BLOCK "StringFileInfo"
-  {
-    BLOCK "040904E4"
-    {
-      VALUE "CompanyName", "maddsua"
-      VALUE "FileVersion", "4.0.0"
-      VALUE "FileDescription", "Serial Terminal (COM monitor)"
-      VALUE "InternalName", "SerialTerminalGraphical"
-      VALUE "LegalCopyright", "https://github.com/maddsua"
-      VALUE "LegalTrademarks", "2023 maddsua/dev"
-      VALUE "OriginalFilename", "serterg"
-      VALUE "ProductName", "Serial Terminal"
-      VALUE "ProductVersion", "4.0.0"
-    }
-  }
-  BLOCK "VarFileInfo"
-  {
-    VALUE "Translation", 0x0409, 1252
-  }
+	BLOCK "StringFileInfo"
+	{
+		BLOCK "040904E4"
+		{
+			VALUE "CompanyName", "maddsua/dev"
+			VALUE "FileVersion", "4.0.0"
+			VALUE "FileDescription", "Serial Terminal (COM monitor)"
+			VALUE "InternalName", "SerialTerminalGraphical"
+			VALUE "LegalCopyright", "https://github.com/maddsua"
+			VALUE "LegalTrademarks", "2023 maddsua/dev"
+			VALUE "OriginalFilename", "serterg"
+			VALUE "ProductName", "Serial Terminal"
+			VALUE "ProductVersion", "4.0.0"
+		}
+	}
+	BLOCK "VarFileInfo"
+	{
+		VALUE "Translation", 0x0409, 1252
+	}
 }
