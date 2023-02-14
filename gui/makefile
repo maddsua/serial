@@ -1,12 +1,13 @@
 
 APP        = SerialTerminal.exe
-OBJECTS    = app.res terminal.o interface.o ../lib/serial.o
+OBJECTS    = main.o app.res terminal.o interface.o
+LIBOBJECTS = ../lib/serial.o
 FLAGS      = -std=c++20
 LIBS       = -lgdi32 -lcomdlg32 -lwinmm
 # -L"../lib" -lserialapi
 #-mwindows
 
-.PHONY: all all-before all-after clean-custom run-custom lib demo
+.PHONY: all all-before all-after clean-custom run-custom prod prod-custom
 all: all-before $(APP) all-after
 
 clean: clean-custom
@@ -20,9 +21,15 @@ purge: clean-custom
 run: run-custom
 	$(APP)
 
+prod: prod-custom
+	g++ $(OBJECTS) -L"../lib" -lserialapi $(LIBS) $(FLAGS) -mwindows -o $(APP)
 
-$(APP): main.o $(OBJECTS) rescodes.hpp terminal.hpp app.hpp
-	g++ main.o $(OBJECTS) $(LIBS) $(FLAGS) -o $(APP)
+
+$(APP): $(OBJECTS) $(LIBOBJECTS)
+	g++ $(OBJECTS) $(LIBOBJECTS) $(LIBS) $(FLAGS) -o $(APP)
+
+main.o: main.cpp
+	g++ -c main.cpp -o main.o $(FLAGS)
 
 terminal.o: terminal.cpp
 	g++ -c terminal.cpp -o terminal.o $(FLAGS)
