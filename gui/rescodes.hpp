@@ -6,18 +6,13 @@
 
 	//	gui
 	#define GUI_STATUSBAR			(10)
-	#define GUI_LOGWIN				(11)
+	#define GUI_TERMINAL			(11)
 	#define GUI_COMPROM				(12)
-	#define GUI_COMBO_PORT			(13)
-	#define GUI_COMBO_SPEED			(14)
-	#define GUI_COMBO_LINE			(15)
-	#define GUI_BTN_SEND			(16)
-	#define GUI_BTN_UPD				(18)
-	#define GUI_CHK_NLN				(19)
-	#define GUI_CHK_QKAT			(20)
-	#define CHECKBOX_TIMESTAMP		(100)
-	#define CHECKBOX_ECHOCMD		(101)
-	#define CHECKBOX_HEXMODE		(102)
+	#define GUI_DROP_PORT			(13)
+	#define GUI_DROP_SPEED			(14)
+	#define GUI_DROP_LINE			(15)
+	#define GUI_BUTTON_SEND			(16)
+	#define GUI_CHECK_HEXMODE		(102)
 
 	//	context menus
 	#define MENUITEM_FILE_SVLOG		(2001)
@@ -25,6 +20,8 @@
 
 	#define MENUITEM_CLEAR			(2101)
 	#define MENUITEM_SPECCHARS		(2102)
+	#define MENUITEM_TIMESTAMP		(2103)
+	#define MENUITEM_ECHOCMD		(2104)
 	#define SUBMENU_HEXSTYLE_SHORT	(2111)
 	#define SUBMENU_HEXSTYLE_FULL	(2112)
 

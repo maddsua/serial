@@ -10,7 +10,7 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	//	serial speeds dropdown
 	//	it isn't gonna be updated coz speeds are hardcoded to the library
 	//	so render it only once and then just use as intended
-	ui->combo_speed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
+	ui->combo_speed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, *appwnd, (HMENU)GUI_DROP_SPEED, NULL, NULL);  
 	{
 		std::vector <std::string> temp;
 
@@ -32,10 +32,10 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	//	port selector
 	//	the items are gonna be assigned by the update timer callback
 	//	so gonna leave it empty for now
-	ui->combo_port = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 415, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
+	ui->combo_port = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 415, 8, 80, 200, *appwnd, (HMENU)GUI_DROP_PORT, NULL, NULL);
 
 	//	line ending selector
-	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 330, 8, 80, 200, *appwnd, (HMENU)GUI_COMBO_LINE, NULL, NULL);
+	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 330, 8, 80, 200, *appwnd, (HMENU)GUI_DROP_LINE, NULL, NULL);
 	{
 		std::vector <std::string> temp;
 		for (auto item : data->endlines) temp.push_back(item.title);
@@ -43,13 +43,13 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	}
 
 	//	terminal window itself
-	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
+	ui->terminal = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, *appwnd, (HMENU)GUI_TERMINAL, NULL, NULL);	
 		
 	//	text input field	
 	ui->command = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 568, 24, *appwnd, (HMENU)GUI_COMPROM, NULL, NULL);
 	
 	//	send button
-	ui->button_send = CreateWindowA(WC_STATICA, NULL, WS_VISIBLE | WS_CHILD | SS_BITMAP | SS_NOTIFY, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
+	ui->button_send = CreateWindowA(WC_STATICA, NULL, WS_VISIBLE | WS_CHILD | SS_BITMAP | SS_NOTIFY, 588, 350, 25, 25, *appwnd, (HMENU)GUI_BUTTON_SEND, NULL, NULL);
 	{
 		HBITMAP	image_send = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(ICON_BUTTON_SEND));
 			if (image_send) SendMessage(ui->button_send, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)image_send);
@@ -57,16 +57,10 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	}
 
 	//	checkboxes
-	ui->check_time = CreateWindowA(WC_BUTTONA, "Show time stamps", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 110, 16, *appwnd, (HMENU)CHECKBOX_TIMESTAMP, NULL, NULL);
-	SendMessageA(ui->check_time, BM_SETCHECK, data->showTimestamps, 0);
-	
-	ui->check_echo = CreateWindowA(WC_BUTTONA, "Echo commands", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 125, 10, 105, 16, *appwnd, (HMENU)CHECKBOX_ECHOCMD, NULL, NULL);
-	SendMessageA(ui->check_echo, BM_SETCHECK, data->echoInputs, 0);
-
-	ui->check_hexMode = CreateWindowA(WC_BUTTONA, "HEX mode", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 235, 10, 75, 16, *appwnd, (HMENU)CHECKBOX_HEXMODE, NULL, NULL);
+	ui->check_hexMode = CreateWindowA(WC_BUTTONA, "HEX mode", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 75, 16, *appwnd, (HMENU)GUI_CHECK_HEXMODE, NULL, NULL);
 	SendMessageA(ui->check_hexMode, BM_SETCHECK, data->hexMode, 0);
 
-	//	status bar
+	//	"status bar"
 	ui->statusbar = CreateWindowA(WC_STATICA, "Starting up...", WS_VISIBLE | WS_CHILD | SS_LEFT, 5, 410, 200, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
 
 	//	set font
@@ -75,9 +69,13 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 		SendDlgItemMessage(*appwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(1, 0));
 	}
 
-	//	setup main menu
+	//	setup main menu items
 	selectSubmenu_hexStyle(ui, SUBMENU_HEXSTYLE_SHORT);
+
 	checkMainMenuItem(ui, MENUITEM_SPECCHARS, data->specialCharsSupport);
+	checkMainMenuItem(ui, MENUITEM_TIMESTAMP, data->showTimestamps);
+	checkMainMenuItem(ui, MENUITEM_ECHOCMD, data->echoInputs);
+
 }
 
 void dropdown(HWND* combo, std::vector <std::string>* items, size_t focus, bool erase) {

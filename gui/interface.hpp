@@ -37,8 +37,6 @@
 
 		HWND button_send;
 
-		HWND check_time;
-		HWND check_echo;
 		HWND check_hexMode;
 
 		HWND statusbar;

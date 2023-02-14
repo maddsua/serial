@@ -21,6 +21,8 @@ MAINMENU MENU {
 		}
 
 		MENUITEM "&Special characters support", MENUITEM_SPECCHARS
+		MENUITEM "&Show time stamps", MENUITEM_TIMESTAMP
+		MENUITEM "&Echo commands", MENUITEM_ECHOCMD
 
 		MENUITEM SEPARATOR
 

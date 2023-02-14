@@ -124,7 +124,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 					
 					switch(LOWORD(wParam)) {
 						
-						case GUI_COMBO_PORT: {
+						case GUI_DROP_PORT: {
 
 							//	select a different port
 							size_t temp = SendMessageW(ui.combo_port, CB_GETCURSEL, 0, 0);
@@ -138,7 +138,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 						} break;
 						
-						case GUI_COMBO_SPEED: {
+						case GUI_DROP_SPEED: {
 
 							//	select different speed
 							size_t temp = SendMessageW(ui.combo_speed, CB_GETCURSEL, 0, 0);	
@@ -152,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 						} break;
 						
-						case GUI_COMBO_LINE: {
+						case GUI_DROP_LINE: {
 							data.sel_endline = SendMessageW(ui.combo_lineEnding, CB_GETCURSEL, 0, 0);
 						} break;
 						
@@ -166,21 +166,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 					switch(LOWORD(wParam)) {
 												
 						//	send
-						case GUI_BTN_SEND: {
+						case GUI_BUTTON_SEND: {
 							sendMessage(serial, &ui, &data);
 						} break;
 						
 
 						//	checkboxes
-						case CHECKBOX_TIMESTAMP: {
-							data.showTimestamps = SendMessageA(ui.check_time, BM_GETCHECK, 0, 0);
-						} break;
-						
-						case CHECKBOX_ECHOCMD: {
-							data.echoInputs = SendMessageA(ui.check_echo, BM_GETCHECK, 0, 0);
-						} break;
 
-						case CHECKBOX_HEXMODE : {
+						case GUI_CHECK_HEXMODE : {
 							data.hexMode = SendMessageA(ui.check_hexMode, BM_GETCHECK, 0, 0);
 							serial->setmode(!data.hexMode);
 						} break;
@@ -229,6 +222,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							//	invert the state
 							data.specialCharsSupport = !data.specialCharsSupport;
 							checkMainMenuItem(&ui, MENUITEM_SPECCHARS, data.specialCharsSupport);
+						} break;
+
+						case MENUITEM_TIMESTAMP: {
+							//	invert the state
+							data.showTimestamps = !data.showTimestamps;
+							checkMainMenuItem(&ui, MENUITEM_TIMESTAMP, data.showTimestamps);
+						} break;
+
+						case MENUITEM_ECHOCMD: {
+							//	invert the state
+							data.echoInputs = !data.echoInputs;
+							checkMainMenuItem(&ui, MENUITEM_ECHOCMD, data.echoInputs);
 						} break;
 
 						//	custom events
@@ -284,7 +289,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 			delete serial;
 			PostQuitMessage(0);
-			//DestroyWindow(ui.button_send);
+			//DestroyWindow(ui.GUI_BUTTON_SEND);
 
 		} break;
 
@@ -314,7 +319,7 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			switch (wParam) {
 
-				case VK_RETURN: return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BTN_SEND, 0);
+				case VK_RETURN: return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BUTTON_SEND, 0);
 
 				case VK_UP: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_FORWARD);
 
