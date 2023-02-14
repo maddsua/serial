@@ -1,8 +1,10 @@
 
 APP        = SerialTerminal.exe
-OBJECTS    = app.res appops.o serialcomms.o
-FLAGS      = -std=c++20 -mwindows
-LIBS       = -lgdi32 -lcomdlg32
+OBJECTS    = app.res terminal.o interface.o ../lib/serial.o
+FLAGS      = -std=c++20
+LIBS       = -lgdi32 -lcomdlg32 -lwinmm
+# -L"../lib" -lserialapi
+#-mwindows
 
 .PHONY: all all-before all-after clean-custom run-custom lib demo
 all: all-before $(APP) all-after
@@ -12,21 +14,24 @@ clean: clean-custom
 #	rm -rf *.exe *.a *.dll
 
 purge: clean-custom
-	del /S *.o *.exe *.a *.dll
-#	rm -rf *.o *.exe *.a *.dll
+	del /S *.o *.exe *.a *.dll *.res
+#	rm -rf *.o *.exe *.a *.dll *.res
 
 run: run-custom
 	$(APP)
 
 
-$(APP): main.o $(OBJECTS)
+$(APP): main.o $(OBJECTS) rescodes.hpp terminal.hpp app.hpp
 	g++ main.o $(OBJECTS) $(LIBS) $(FLAGS) -o $(APP)
 
-appops.o: appops.cpp
-	g++ -c appops.cpp -o appops.o $(FLAGS)
+terminal.o: terminal.cpp
+	g++ -c terminal.cpp -o terminal.o $(FLAGS)
 
-serialcomms.o: serialcomms.cpp
-	g++ -c serialcomms.cpp -o serialcomms.o $(FLAGS)
+interface.o: interface.cpp
+	g++ -c interface.cpp -o interface.o $(FLAGS)
+
+../lib/serial.o: ../lib/serial.cpp
+	g++ -c ../lib/serial.cpp -o ../lib/serial.o $(FLAGS)
 
 app.res: app.rc
 	windres -i app.rc --input-format=rc -o app.res -O coff 
