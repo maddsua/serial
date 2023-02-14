@@ -112,7 +112,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			};
 
 			//	load user config
-			loadConfiguration(&data);
+			if (loadConfiguration(&data)) {
+				puts("Config loaded");
+			} else puts("Config load FAILED");
 
 			//	get menus
 			ui.menu_main = GetMenu(hwnd);
@@ -309,7 +311,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		case WM_DESTROY: {
 
 			delete serial;
-			saveConfiguration(&data);
+			
+			if (saveConfiguration(&data)) {
+				puts("Config saved");
+			} else puts("Config save FAILED");
+
 			PostQuitMessage(0);
 			//DestroyWindow(ui.GUI_BUTTON_SEND);
 
@@ -431,6 +437,7 @@ bool saveConfiguration(appData* data) {
 
 bool loadConfiguration(appData* data) {
 
+	bool actionResult = true;
 	auto filepath = preparePath(CONFIG_SAVE_TREE);
 	if (!filepath.size()) return false;
 
@@ -456,11 +463,10 @@ bool loadConfiguration(appData* data) {
 			if (temp < data->endlines.size()) data->sel_endline = temp;
 		
 	} catch(...) {
-		configFile.close();
-		puts("config load failed");
-		return false;
+		actionResult = false;
 	}
-	puts("config load ok");
+
 	configFile.close();
-	return true;
+
+	return actionResult;
 }
