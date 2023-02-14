@@ -35,6 +35,6 @@
 	std::string hexToBin(std::string data);
 	std::string pickHexOnly(std::string text);
 
-	std::string restoreEscapedChars(std::string text);
+	void restoreEscapedChars(std::string* text);
 
 #endif
