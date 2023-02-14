@@ -7,15 +7,25 @@
 #include <windows.h>
 #include <CommCtrl.h>
 #include <stdio.h>
+#include <dir.h>
+#include <dirent.h>
 
 #include <thread>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <regex>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
+using JSON = nlohmann::json;
+
+#include "../lib/serial.hpp"
 
 #include "app.hpp"
+#include "terminal.hpp"
 
-const int serialSpeedList[serialSpeeds] = {
+const std::vector <uint32_t> serialSpeeds = {
 	110, 300, 600, 1200, 2400, 4800, 9600,
 	14400, 19200, 38400, 56000, 57600,
 	115200, 128000, 256000
@@ -23,8 +33,12 @@ const int serialSpeedList[serialSpeeds] = {
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC mainevents;
+
+std::string preparePath(std::string tree);
+bool saveConfiguration(appData* data);
+bool loadConfiguration(appData* data);
 
 
 //	-------		main
@@ -37,39 +51,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpfnWndProc	 = WndProc;
 	wc.hInstance	 = hInstance;
 	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wc.lpszMenuName  = "MAINMENU";
-	wc.lpszClassName = "WindowClass";
+	wc.hbrBackground = CreateSolidBrush(0xffffff);
+	wc.lpszMenuName  = APP_MAIN_MENU_ID;
+	wc.lpszClassName = "terminalMainWindow";
 	wc.hIcon		 = LoadIconA(hInstance, "APPICON");
 	wc.hIconSm		 = LoadIconA(hInstance, "APPICON");
 
 	if (!RegisterClassExA(&wc)) {
 		MessageBoxA(NULL, "Window Registration Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-		return 0;
+		return 1;
 	}
 	
 	//	calc window position (1/8 left; 1/10 top)
-    int winPosx = (GetSystemMetrics(SM_CXSCREEN) / 2) - (windowSizeX);
-    int winPosy = (GetSystemMetrics(SM_CYSCREEN) / 2) - (windowSizeY / 1.2);
+    auto winPosx = (GetSystemMetrics(SM_CXSCREEN) / 2) - (windowSizeX);
+    auto winPosy = (GetSystemMetrics(SM_CYSCREEN) / 2) - (windowSizeY / 1.2);
 
-	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "WindowClass", APP_NAME, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-		winPosx, winPosy, windowSizeX, windowSizeY,
-		NULL, NULL, hInstance, NULL);
+	HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "terminalMainWindow", APP_TITLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, winPosx, winPosy, windowSizeX, windowSizeY, NULL, NULL, hInstance, NULL);
 
-	if (hwnd == NULL) {
+	if (!hwnd) {
 		MessageBoxA(NULL, "Window Creation Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-		return 0;
+		return 2;
 	}
 
-	while(GetMessage(&msg, NULL, 0, 0) > 0) {
+	while (GetMessage(&msg, NULL, 0, 0)) {
 	
 		// skip msg translation to prevent sound	
-		if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN)
-			goto dspmsg;
-	
-		TranslateMessage(&msg);
-		
-	dspmsg:
+		if (msg.wParam != VK_RETURN && msg.wParam != VK_ESCAPE)
+			TranslateMessage(&msg);
+
 		DispatchMessage(&msg);
 	}
 	
@@ -77,488 +86,381 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 }
 
 
-//	-------		input form enter key press
-LRESULT CALLBACK cmdEVs(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	
-	//	enter key press
-	if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-		return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BTN_SEND, 0);
-	
-	//	ctrl+A shortcut
-	} else if (msg == WM_CHAR && wParam == 1) {
-		SendMessage(wnd, EM_SETSEL, 0, -1);
-		return 0;
-	}
-	
-	//	up/down arrows for cmd history
-	else if (msg == WM_KEYDOWN && wParam == VK_UP) {
-		return CallWindowProc(WndProc, wnd, WM_COMMAND, ICEV_CMDLIST, (LPARAM)0);
-
-	} else if (msg == WM_KEYDOWN && wParam == VK_DOWN) {
-		return CallWindowProc(WndProc, wnd, WM_COMMAND, ICEV_CMDLIST, (LPARAM)1);
-	}
-	
-	//	other
-	else return CallWindowProc(mainevents, wnd, msg, wParam, lParam);
-
-   return 0;
-}
-
-
-//	-------		app itself
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
-	
-	static std::thread worker;
-	
-	static char bufferIn[commsgbuff];
-	static char bufferOut[commsgbuff];
-	static int commstat;
-	static bool placeNewLine;
 
-	static HWND combospeed;
-	static HWND comboport;
-	static HWND terminalwindow;
-	static HWND commprompt;
-	static HWND senditbtn;
-	static HWND clearbtn;
-	static HWND newlinecheck;
-	static HWND extended;
-	
-	static HWND atbtn_at;
-	static HWND atbtn_id;
-	static HWND atbtn_ok;
-	static HWND atbtn_prefix;
-	
-	static char** serialPorts;
-	static unsigned int portsReady;
-	
-	static unsigned int selspeed;
-	static unsigned int selport;
-	
-	static bool isExtended;
-	
-	static std::vector <std::string> commLog;
-	static std::vector <std::string> cmdHistory;
-	
-	static bool viewHistory;
-	static int historyItem;
-		
-	
-switch(Message) {
-		
-	case WM_CREATE: {
-					
-		//	init vars
-		serialPorts = create2d(scanSerialPorts, portNameLen);
-		portsReady = scanPorts(serialPorts);
-			
-		placeNewLine = true;
-		commstat = 0;
-		
-		//	default settings
-		selspeed = defSerialSpeed;
-		
-		if (portsReady != 0) selport = portsReady - 1;
-			else selport = 0;
-		
-		isExtended = false;
-		viewHistory = false;
-		
-		
-		//	draw GUI
-		//	drop lists
-		comboport = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 420, 8, 80, 200, hwnd, (HMENU)GUI_COMBO_PORT, NULL, NULL);
-			dropdown(comboport, serialPorts, portsReady, selport, true);
-			
-		combospeed = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 500, 8, 120, 200, hwnd, (HMENU)GUI_COMBO_SPEED, NULL, NULL);  
-			dropdown(combospeed, serialSpeedList, serialSpeeds, selspeed, false);
-		
-		//	log
-		terminalwindow = CreateWindowA(WC_EDITA, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 0, 40, 630, 300, hwnd, (HMENU)GUI_LOGWIN, NULL, NULL);	
-			
-		//	input	
-		commprompt = CreateWindowA(WC_EDITA, NULL, WS_VISIBLE | WS_CHILD | ES_LEFT | WS_BORDER, 10, 350, 510, 24, hwnd, (HMENU)GUI_COMPROM, NULL, NULL);			
-		
-		//	buttons
-		senditbtn = CreateWindowA("BUTTON", "Send", WS_VISIBLE | WS_CHILD, 530, 350, 80, 25, hwnd, (HMENU)GUI_BTN_SEND, NULL, NULL);
-		
-		clearbtn = CreateWindowA("BUTTON", "Clear&&Update", WS_VISIBLE | WS_CHILD, 530, 380, 80, 25, hwnd, (HMENU)GUI_BTN_CLR, NULL, NULL);
-		
-		//	checkboxes
-		newlinecheck = CreateWindowA("BUTTON", "Use new line", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 10, 10, 80, 16, hwnd, (HMENU)GUI_CHK_NLN, NULL, NULL);
-		SendMessageW(newlinecheck, BM_SETCHECK, BST_CHECKED, 0);
-		
-		extended = CreateWindowA("BUTTON", "AT controls", WS_VISIBLE | WS_CHILD | BS_VCENTER | BS_AUTOCHECKBOX, 100, 10, 75, 16, hwnd, (HMENU)GUI_CHK_QKAT, NULL, NULL);
-			
-		//	AT-macro buttons
-		atbtn_at = CreateWindowA("BUTTON", "AT", WS_CHILD, 10, 380, 80, 25, hwnd, (HMENU)GUI_AT_AT, NULL, NULL);
-		atbtn_id = CreateWindowA("BUTTON", "AT+ID", WS_CHILD, 95, 380, 80, 25, hwnd, (HMENU)GUI_AT_ID, NULL, NULL);
-		atbtn_ok = CreateWindowA("BUTTON", "OK", WS_CHILD, 180, 380, 80, 25, hwnd, (HMENU)GUI_AT_OK, NULL, NULL);
-		atbtn_prefix = CreateWindowA("BUTTON", "AT+", WS_CHILD, 265, 380, 80, 25, hwnd, (HMENU)GUI_AT_PREF, NULL, NULL);
-		
-		//	set font
-		for (int i = GUI_LOGWIN; i <= GUI_AT_ID; i++)
-			SendDlgItemMessage(hwnd, i, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(TRUE,0));
-		
-		//	start app
-		worker = std::thread(serialIO, serialPorts[selport], serialSpeedList[selspeed], bufferIn, bufferOut, &commstat, placeNewLine);
-		SetTimer(hwnd, CYCLE_PRINT, TTOUT, NULL);
-		
-		//	ewdirect keypress input for input form
-		mainevents = (WNDPROC)SetWindowLongPtr(commprompt, GWLP_WNDPROC, (LONG_PTR)cmdEVs);
+	static uiElements ui;
+	static appData data;
 
-		break;
-	}
+	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
+
+	//static HBRUSH hbrBkgnd = 0;
 	
-	case WM_COMMAND:{
+	switch(Message) {
 			
-		switch(HIWORD(wParam)) {
+		case WM_CREATE: {
+						
+			//	get available serial speeds from the serial api
+			//	ports are not gonna be ready just yet so we will get them by the times later
+			data.speeds = serial->getSpeeds();
+
+			//	set default line endings
+			data.endlines = {
+				{"CR+LF", "\r\n"},
+				{"No endline", {/* empty line */}},
+				{"CR only", "\r"},
+				{"LF only", "\n"}
+			};
+
+			//	load user config
+			loadConfiguration(&data);
+
+			//	get menus
+			ui.menu_main = GetMenu(hwnd);
+			ui.menu_hexStyle = GetSubMenu(ui.menu_main, 1);	//	(1) - index of that menu by the resource file
+
+			uiInit(&hwnd, &ui, &data);
+			
+			SetTimer(hwnd, TIMER_DATAREAD, TIMEOUT_DATAREAD, NULL);
+			SetTimer(hwnd, TIMER_PORTSLIST, TIMEOUT_PORTSLIST, NULL);
+
+			//	redirect keypress event for input form
+			mainevents = (WNDPROC)SetWindowLongPtr(ui.command, GWLP_WNDPROC, (LONG_PTR)keyboardEvents);
+
+			break;
+		}
 		
-			case LBN_SELCHANGE:{
+		case WM_COMMAND: {
 				
-				switch(LOWORD(wParam)) {
+			switch (HIWORD(wParam)) {
+			
+				//	dropdowns
+				case LBN_SELCHANGE: {
 					
-					case GUI_COMBO_PORT:{
+					switch(LOWORD(wParam)) {
 						
-						//	disconnect
-						if (!commstat) {
-							commstat = 1;
-							worker.join();
-						}
+						case GUI_DROP_PORT: {
+
+							//	select a different port
+							size_t temp = SendMessageW(ui.combo_port, CB_GETCURSEL, 0, 0);
+							//	exit if it's the same
+							if (temp == data.sel_port) break;
+
+							//	assing port
+							data.sel_port = temp;
+							//	reset
+							serial->clearFocus();
+
+						} break;
 						
-						//	clear
-						memset(bufferOut, 0, sizeof(bufferOut));
-						SetWindowText(terminalwindow, 0);
+						case GUI_DROP_SPEED: {
+
+							//	select different speed
+							size_t temp = SendMessageW(ui.combo_speed, CB_GETCURSEL, 0, 0);	
+							//	exit if it's the same
+							if (temp == data.sel_speed) break;
+
+							//	apply new speed
+							data.sel_speed = temp;
+							serial->setSpeed(data.speeds.at(data.sel_speed));
+							serial->clearFocus();
+
+						} break;
 						
-						//	clear log
-						commLog.clear();
+						case GUI_DROP_LINE: {
+							data.sel_endline = SendMessageW(ui.combo_lineEnding, CB_GETCURSEL, 0, 0);
+						} break;
 						
-						//	select
-						selport = (int) SendMessageW(comboport, CB_GETCURSEL, 0, 0);
-						
-						//	reconnect
-						commstat = 0;
-						worker = std::thread(serialIO, serialPorts[selport], serialSpeedList[selspeed], bufferIn, bufferOut, &commstat, placeNewLine);
-							
-						break;
 					}
-					case GUI_COMBO_SPEED: {
-						selspeed = (int) SendMessageW(combospeed, CB_GETCURSEL, 0, 0);		
-						break;
+
+				} break;
+				
+				//	buttons
+				case BN_CLICKED: {
+					
+					switch(LOWORD(wParam)) {
+												
+						//	send
+						case GUI_BUTTON_SEND: {
+							sendMessage(serial, &ui, &data);
+						} break;
+						
+
+						//	checkboxes
+
+						case GUI_CHECK_HEXMODE : {
+							data.hexMode = SendMessageA(ui.check_hexMode, BM_GETCHECK, 0, 0);
+							serial->setmode(!data.hexMode);
+						} break;
+						
+						
+						//	context menus
+						case MENUITEM_FILE_SVLOG: {
+							saveCommLog(&hwnd, &data.log);
+						} break;
+						
+						case MENUITEM_FILE_EXIT: {
+							PostMessage(hwnd, WM_CLOSE, 0, 0);
+						} break;
+
+
+						case MENUITEM_CLEAR: {
+
+							//	clear log
+							data.log.clear();
+							//	erase texts
+							SetWindowText(ui.command, NULL);
+							SetWindowText(ui.terminal, NULL);
+							//	reset serial comms
+							serial->clearFocus();
+
+						} break;
+
+						case SUBMENU_HEXSTYLE_SHORT: {
+
+							data.hexStyleFull = false;
+							selectSubmenu_hexStyle(&ui, SUBMENU_HEXSTYLE_SHORT);
+
+						} break;
+
+						case SUBMENU_HEXSTYLE_FULL: {
+
+							data.hexStyleFull = true;
+							selectSubmenu_hexStyle(&ui, SUBMENU_HEXSTYLE_FULL);
+
+						} break;
+
+						case MENUITEM_SPECCHARS: {
+							//	invert the state
+							data.specialCharsSupport = !data.specialCharsSupport;
+							checkMainMenuItem(&ui, MENUITEM_SPECCHARS, data.specialCharsSupport);
+						} break;
+
+						case MENUITEM_TIMESTAMP: {
+							//	invert the state
+							data.showTimestamps = !data.showTimestamps;
+							checkMainMenuItem(&ui, MENUITEM_TIMESTAMP, data.showTimestamps);
+						} break;
+
+						case MENUITEM_ECHOCMD: {
+							//	invert the state
+							data.echoInputs = !data.echoInputs;
+							checkMainMenuItem(&ui, MENUITEM_ECHOCMD, data.echoInputs);
+						} break;
+
+
+						case MENUITEM_ABOUT: {
+							displayAboutMessage();
+						} break;
+
+						case MENUITEM_HELP: {
+							displayHelpMessage();
+						} break;	
+
+
+						//	custom events
+						case KEYBOARD_ARROWS: {
+							historyRecall(&ui, &data, lParam);
+						} break;
+
+						case KEYBOARD_ESCAPE: {
+							resetCommandPrompt(&ui, &data);
+						} break;
 					}
-				}
-				break;
+					
+				} break;
 			}
 			
-			case BN_CLICKED:{
+		} break;
+		
+		case WM_SETFOCUS: {
+			SetFocus(ui.command);
+		} break;
+		
+		case WM_TIMER: {
+
+			switch (wParam) {
+
+				case TIMER_DATAREAD: {
+
+					//	exit if we can't access a port just yet
+					if (data.sel_port >= data.ports.size()) break;
+					
+					auto input = serial->read(data.ports.at(data.sel_port));
+					if (!input.size()) break;
+
+					printComm(&ui, &data, input, true);
+
+				} break;
+
+				case TIMER_PORTSLIST: {
+
+					updateComPorts(serial, &ui, &data);
+					updateStatusBar(serial, &ui, &data);
+
+				} break;
 				
-				switch(LOWORD(wParam)) {
-					
-					//	clear button
-					case GUI_BTN_CLR:{
-						
-						//	disconnect
-						if (!commstat) {
-							commstat = 1;
-							worker.join();
-						}
-						
-						//	update port list
-						portsReady = scanPorts(serialPorts);
-						dropdown(comboport, serialPorts, portsReady, selport, true);
-						
-						//	flush buffers
-						memset(bufferIn, 0, sizeof(bufferIn));
-						memset(bufferOut, 0, sizeof(bufferOut));
-						
-						//	clear log
-						commLog.clear();
-						
-						//	erase texts
-						SetWindowText(commprompt, 0);
-						SetWindowText(terminalwindow, 0);
-						
-						//	reconnect
-						commstat = 0;
-						worker = std::thread(serialIO, serialPorts[selport], serialSpeedList[selspeed], bufferIn, bufferOut, &commstat, placeNewLine);
-
-						break;
-					}
-					
-					//	send button
-					case GUI_BTN_SEND:{
-						
-						viewHistory = false;
-						
-						//	get command trom input control
-						char userCommand[commsgbuff];
-						GetWindowTextA(commprompt, userCommand, commsgbuff);
-						
-						//	process command
-						if (strlen(userCommand) > 0) {
-							
-							//	add command to history
-							if (cmdHistory.size() > 0) {
-								
-								bool foundCmd = false;
-								int foundCmdIndex;
-								
-								for (int i = 0; i < cmdHistory.size(); i++) {
-									
-									if (userCommand == cmdHistory[i]) {
-										
-										foundCmd = true;
-										foundCmdIndex = i;
-									}
-								}
-								
-								if (foundCmd) std::swap(cmdHistory[foundCmdIndex], cmdHistory[cmdHistory.size() - 1]);
-									else cmdHistory.push_back(userCommand);
-								
-							} else {
-								cmdHistory.push_back(userCommand);
-							}
-							
-							//	display command
-							if (placeNewLine) {
-								
-								//	add new line sign
-								strcat(userCommand, "\n");
-								
-								//	add port info
-								char logtmp[comlogbuff];
-									metalog(userCommand, serialPorts[selport], logtmp, true);
-								
-								//	display and write log
-								log(terminalwindow, logtmp);
-								commLog.push_back(logtmp);
-							}
-							
-							//	copy command to output buffer
-							strcpy(bufferOut, userCommand);
-							
-							//	clear command prompt
-							SetWindowText(commprompt, 0);
-						}
-						
-						break;
-					}
-					
-					//	AT-buttons
-					case GUI_AT_PREF:{
-						
-						//	copy text to command prompt
-						SetWindowTextA(commprompt, "AT+");
-						
-						//	set focus
-						SetFocus(commprompt);
-						
-						//	set text curcor position
-						int TextLen = SendMessage(commprompt, WM_GETTEXTLENGTH, 0, 0);
-						SendMessage(commprompt, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
-						
-						break;
-					}
-					case GUI_AT_AT:{
-						
-						quickcmd(terminalwindow, "AT\n", placeNewLine, serialPorts[selport], &commLog, bufferOut);
-						break;
-					}	
-					case GUI_AT_OK:{
-
-						quickcmd(terminalwindow, "OK\n", placeNewLine, serialPorts[selport], &commLog, bufferOut);
-						break;
-					}
-					case GUI_AT_ID:{
-
-						quickcmd(terminalwindow, "AT+ID\n", placeNewLine, serialPorts[selport], &commLog, bufferOut);
-						break;
-					}
-					
-				//	checkboxes	
-					case GUI_CHK_NLN:{
-						
-						//	just get the flag
-						placeNewLine = (bool) SendMessageW(newlinecheck, BM_GETCHECK, 0, 0);
-						break;
-					}
-					
-					case GUI_CHK_QKAT:{
-						
-						unsigned short int showflag;
-						
-						if (isExtended) {
-							isExtended = false;
-							showflag = 0;
-						}
-						else{
-							isExtended = true;
-							showflag = 1;
-						}
-						
-						//	draw extended controls
-							ShowWindow(atbtn_prefix, showflag);
-							ShowWindow(atbtn_ok, showflag);
-							ShowWindow(atbtn_id, showflag);
-							ShowWindow(atbtn_at, showflag);
-
-						break;
-					}
-					
-				//	menus
-					case CM_ABOUT:{
-						
-						char msgabout[256] = {0};
-							sprintf(msgabout, "%s v%s\nA serial port communication utility\n\n%s\n%s", APP_NAME, APP_VERSION, VER_AUTHSTAMP, APP_COPYRIGHT);
-							
-						MessageBoxA(NULL, msgabout, "About...", 0);
-						break;
-					}
-					
-					case CM_FILE_SVLOG:{
-						
-						OPENFILENAMEA ofn = {0};
-							char fpath[MAX_PATH] = {0};
-							
-						ofn.lStructSize = sizeof(ofn);
-						ofn.hwndOwner = hwnd;
-						ofn.lpstrFilter = "Log Files (*.log)\0*.log\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
-						ofn.lpstrFile = fpath;
-						ofn.nMaxFile = MAX_PATH;
-						ofn.lpstrDefExt = "txt";
-
-						ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-						
-						if (GetSaveFileNameA(&ofn)) {
-							
-							if (!SaveLogFile(&commLog, ofn.lpstrFile)) {
-								MessageBoxA(hwnd, "Save file failed.", "Error", MB_OK | MB_ICONEXCLAMATION);
-							}
-						}
-	
-						break;
-					}
-					
-					case CM_FILE_EXIT:{
-						
-						commstat = 1;
-						PostMessage(hwnd, WM_CLOSE, 0, 0);
-						break;
-					}
-					
-					//	custom events
-					case ICEV_CMDLIST: {
-						
-						if (cmdHistory.size() > 0) {
-						
-							//	open history of scroll trough it
-							if (!viewHistory) {
-								
-								historyItem = cmdHistory.size() - 1;
-								viewHistory = true;
-							}
-							else{
-							
-								if (lParam == 0) {
-									historyItem--;
-								}
-								else{
-									historyItem++;
-								}
-							}
-							
-								//	set index in range
-								if (historyItem < 0) {
-									historyItem = 0;
-								}
-								else if (historyItem >= cmdHistory.size()) {
-									historyItem = cmdHistory.size() - 1;
-								}
-							
-							//	paste cmd
-							SetWindowTextA(commprompt, cmdHistory[historyItem].c_str());
-								
-							//	set text curcor position
-							int TextLen = SendMessage(commprompt, WM_GETTEXTLENGTH, 0, 0);
-							SendMessage(commprompt, EM_SETSEL, (WPARAM)TextLen, (LPARAM)TextLen);
-						}
-						
-						break;
-					}
-				}
-				
-				break;
+			
+				default: break;
 			}
-		}
+
+		} break;
 		
-		break;
+		
+		case WM_DESTROY: {
+
+			delete serial;
+			saveConfiguration(&data);
+			PostQuitMessage(0);
+			//DestroyWindow(ui.GUI_BUTTON_SEND);
+
+		} break;
+
+		/*case WM_CTLCOLORSTATIC: {
+			HDC hdcStatic = (HDC) wParam;
+			SetTextColor(hdcStatic, RGB(255,255,255));
+			SetBkColor(hdcStatic, RGB(0,0,0));
+
+			if (hbrBkgnd == NULL) hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
+
+			return (INT_PTR)hbrBkgnd;
+		}*/
+		
+		
+		default: return DefWindowProc(hwnd, Message, wParam, lParam);
 	}
-	
-	case WM_SETFOCUS:{
-		
-		SetFocus(commprompt);
-		break;
-	}
-	
-	case WM_TIMER: {
-		
-		if (!commstat && strlen(bufferIn) > 0) {
-			
-			char logtmp[comlogbuff];
-			
-			if (placeNewLine) metalog(bufferIn, serialPorts[selport], logtmp, false);
-			else strcpy(logtmp, bufferIn);
-
-			log(terminalwindow, logtmp);
-			commLog.push_back(logtmp);
-			
-			memset(bufferIn, 0, sizeof(bufferIn)*sizeof(char));
-		}
-
-		switch (commstat) {
-			case 2:
-				log(terminalwindow, "___ Port is not connected ___\n");
-			break;
-
-			case 3:
-				log(terminalwindow, "___ Port busy ___\n");
-			break;
-
-			case 4:
-				log(terminalwindow, "___ Port config error ___\n");
-			break;
-
-			case 6:
-				log(terminalwindow, "___ Port has been disconnected ___\n");
-			break;
-		
-			default:
-			break;
-		}
-				
-		commstat = 0;
-		
-		break;
-	}
-	
-	case WM_DESTROY: {
-		
-		//	close io thread
-		commstat = 1;
-		worker.join();
-		
-		//	destroy ports array
-		clear2d(serialPorts, scanSerialPorts);
-		
-		//	exit
-		PostQuitMessage(0);
-		
-		break;
-	}
-	
-	default:
-		return DefWindowProc(hwnd, Message, wParam, lParam);
-}
 
 	return 0;
+}
+
+
+LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	switch (msg) {
+
+		case WM_KEYDOWN: {
+
+			switch (wParam) {
+
+				case VK_RETURN: return CallWindowProc(WndProc, wnd, WM_COMMAND, GUI_BUTTON_SEND, 0);
+
+				case VK_UP: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_FORWARD);
+
+				case VK_DOWN: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ARROWS, (LPARAM)HISTORY_BACKWARD);
+
+				case VK_ESCAPE: return CallWindowProc(WndProc, wnd, WM_COMMAND, KEYBOARD_ESCAPE, 0);
+			
+				default: break;
+			}
+
+		} break;
+
+		case WM_CHAR: {
+			
+			switch (wParam) {
+
+				case 1: {
+					SendMessage(wnd, EM_SETSEL, 0, -1);
+				} break;
+			
+				default: break;
+			}
+
+		} break;
+	
+		default: break;
+	}
+	
+   return CallWindowProc(mainevents, wnd, msg, wParam, lParam);
+}
+
+std::string preparePath(std::string tree) {
+
+	tree = std::regex_replace(tree, std::regex("[\\\\\\/]+"), "\\");
+
+	std::string userdir = std::string(std::getenv("userprofile"));
+	if (!userdir.size()) userdir = std::getenv("%HOMEPATH%");
+
+	if (!userdir.size()) {
+		return {};
+	}
+
+	auto createIfDontexist = [](std::string path) {
+		auto dir = opendir(path.c_str());
+		if (dir) {
+			closedir(dir);
+			return true;
+		}
+		if (mkdir(path.c_str())) return false;
+		return true;
+	};
+
+	auto hierrarchy = tree.find_first_of('\\');
+	while(hierrarchy != std::string::npos) {
+		if (!createIfDontexist(userdir + tree.substr(0, hierrarchy))) return {};
+		hierrarchy = tree.find_first_of('\\', hierrarchy + 1);
+	}
+
+	return userdir + tree;
+}
+
+bool saveConfiguration(appData* data) {
+
+	auto filepath = preparePath(CONFIG_SAVE_TREE);
+	if (!filepath.size()) return false;
+
+	std::ofstream configFile(filepath.c_str(), std::ios::out);
+	if (!configFile.is_open()) return false;
+
+	JSON appconfig = {
+		{"showTimestamps", data->showTimestamps},
+		{"echoInputs", data->echoInputs},
+		{"hexMode", data->hexMode},
+		{"hexStyleFull", data->hexStyleFull},
+		{"specialCharsSupport", data->specialCharsSupport},
+		{"sel_speed", data->sel_speed},
+		{"sel_port", data->sel_port},
+		{"sel_endline", data->sel_endline}
+	};
+
+	configFile << appconfig.dump();
+
+	configFile.close();
+
+	return true;
+}
+
+bool loadConfiguration(appData* data) {
+
+	auto filepath = preparePath(CONFIG_SAVE_TREE);
+	if (!filepath.size()) return false;
+
+	std::ifstream configFile(filepath.c_str(), std::ios::in);
+	if (!configFile.is_open()) return false;
+
+	try {
+		
+		auto appconfig = JSON::parse(configFile);
+
+		data->showTimestamps = appconfig["showTimestamps"].get<bool>();
+		data->echoInputs = appconfig["echoInputs"].get<bool>();
+		data->hexMode = appconfig["hexMode"].get<bool>();
+		data->hexStyleFull = appconfig["hexStyleFull"].get<bool>();
+		data->specialCharsSupport = appconfig["specialCharsSupport"].get<bool>();
+
+		size_t temp;
+		temp = appconfig["sel_speed"].get<size_t>();
+			if (temp < data->speeds.size()) data->sel_speed = temp;
+		temp = appconfig["sel_port"].get<size_t>();
+			if (temp < data->ports.size()) data->sel_port = temp;
+		temp = appconfig["sel_endline"].get<size_t>();
+			if (temp < data->endlines.size()) data->sel_endline = temp;
+		
+	} catch(...) {
+		configFile.close();
+		puts("config load failed");
+		return false;
+	}
+	puts("config load ok");
+	configFile.close();
+	return true;
 }

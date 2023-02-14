@@ -1,5 +1,9 @@
+build/
+.vscode/
 *.o
+*.a
 *.exe
 *.res
+*.dll
 cli/data/headerString.txt
-build/
+gui/res/*.png
