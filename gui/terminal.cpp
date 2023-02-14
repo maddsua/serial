@@ -241,8 +241,11 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 
 	//	write data to com port
 	auto port = data->ports.at(data->sel_port);
-	auto endline = data->endlines.at(data->sel_endline).bytes;
-	if (!serial->write(port, ((data->specialCharsSupport && !data->hexMode) ? restoreEscapedChars(message) : message) + endline)) {
+
+	if (data->specialCharsSupport && !data->hexMode) restoreEscapedChars(&message);
+	if (!data->hexMode) message += data->endlines.at(data->sel_endline).bytes;
+
+	if (!serial->write(port, message)) {
 		SetWindowTextA(ui->statusbar, "Failed to send the message!");
 		return;
 	}
@@ -263,28 +266,26 @@ const std::vector <unescape> escapedCharsTable = {
 	{'b', '\b'}
 };
 
-std::string restoreEscapedChars(std::string text) {
+void restoreEscapedChars(std::string* text) {
 
-	for (size_t i = 0; i < text.size(); i++) {
+	for (size_t i = 0; i < text->size(); i++) {
 
 		char escapechar = 0;
 
 		for (auto item : escapedCharsTable) {
-			if (text[i] == item.front) {
+			if (text->at(i) == item.front) {
 				escapechar = item.escape;
 				break;
 			}
 		}
 
-		if (i >= 2 && (escapechar && text.at(i - 1) == '\\')) {
-			if (i >= 3 && text.at(i - 2) == '\\') {
-				text.erase(i - 2, 1);
+		if (i >= 2 && (escapechar && text->at(i - 1) == '\\')) {
+			if (i >= 3 && text->at(i - 2) == '\\') {
+				text->erase(i - 2, 1);
 				continue;
 			}
-			text.replace(text.begin() + (i - 1), text.begin() + (i + 1), std::string(1, escapechar));
+			text->replace(text->begin() + (i - 1), text->begin() + (i + 1), std::string(1, escapechar));
 			i -= 2;
 		}
 	}
-
-	return text;
 }
