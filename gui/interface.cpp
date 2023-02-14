@@ -135,3 +135,16 @@ void resetCommandPrompt(uiElements* ui, appData* data) {
 	data->historyOpen = false;
 	SetWindowText(ui->command, NULL);
 }
+
+void displayHelpMessage() {
+
+	std::string msg = std::string("So how to use this thing?\n\n") +
+		"I assume that you at least know what a COM port is,\n" + 
+		"if it isn't the case, I suggest you to read some stuff online first.\n\n" +
+		"Okay, this thing is literaly what it seems to be.\n" +
+		"A terminal for serial port.\n" +
+		"For free. Yeah, truly unimaginable\n\n" + 
+		"IDK what kind of readme did you expect. LOL";
+	
+	MessageBoxA(NULL, msg.c_str(), "Quick readme", 0);
+}

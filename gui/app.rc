@@ -30,6 +30,7 @@ MAINMENU MENU {
 	}
 
 	POPUP "&Help"{
+		MENUITEM "&Quick readme", MENUITEM_HELP
 		MENUITEM "&About", MENUITEM_ABOUT
 	}
 }

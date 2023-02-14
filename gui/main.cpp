@@ -180,10 +180,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						
 						
 						//	context menus
-						case MENUITEM_ABOUT: {
-							displayAboutMessage();
-						} break;
-											
 						case MENUITEM_FILE_SVLOG: {
 							saveCommLog(&hwnd, &data.log);
 						} break;
@@ -191,6 +187,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 						case MENUITEM_FILE_EXIT: {
 							PostMessage(hwnd, WM_CLOSE, 0, 0);
 						} break;
+
 
 						case MENUITEM_CLEAR: {
 
@@ -235,6 +232,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 							data.echoInputs = !data.echoInputs;
 							checkMainMenuItem(&ui, MENUITEM_ECHOCMD, data.echoInputs);
 						} break;
+
+
+						case MENUITEM_ABOUT: {
+							displayAboutMessage();
+						} break;
+
+						case MENUITEM_HELP: {
+							displayHelpMessage();
+						} break;	
+
 
 						//	custom events
 						case KEYBOARD_ARROWS: {

@@ -82,6 +82,7 @@
 
 	//	display About Message, captain obvious
 	void displayAboutMessage();
+	void displayHelpMessage();
 
 	void selectSubmenu_hexStyle(uiElements* ui, size_t selectID);
 	void checkMainMenuItem(uiElements* ui, size_t selectID, bool checked);
