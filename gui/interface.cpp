@@ -35,7 +35,7 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	ui->combo_port = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 415, 8, 80, 200, *appwnd, (HMENU)GUI_DROP_PORT, NULL, NULL);
 
 	//	line ending selector
-	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 330, 8, 80, 200, *appwnd, (HMENU)GUI_DROP_LINE, NULL, NULL);
+	ui->combo_lineEnding = CreateWindowA(WC_COMBOBOXA, NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SIMPLE | WS_VSCROLL, 320, 8, 90, 200, *appwnd, (HMENU)GUI_DROP_LINE, NULL, NULL);
 	{
 		std::vector <std::string> temp;
 		for (auto item : data->endlines) temp.push_back(item.title);
