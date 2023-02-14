@@ -1,6 +1,8 @@
-# Serial
+# maddsua/serial
 
 This repo contains a few iterations of a serial terminal app made by myself as long as a library for easy COM port communications.
+
+About v4: I'm not creating a release until I'm sure it does not contain any critical issues.
 
 
 # Terminals
