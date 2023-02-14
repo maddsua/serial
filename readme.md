@@ -2,6 +2,9 @@
 
 This repo contains a few iterations of a serial terminal app made by myself as long as a library for easy COM port communications.
 
+
+# Terminals
+
 ## Building process
 
 Is as simple as runnig `make`. It requires:
@@ -11,7 +14,23 @@ Is as simple as runnig `make`. It requires:
 - windres (check if you have it included in binutils, should come along with GCC too)
 - make tool. It is included in binutils, but is named like `make-some-build-info-nobody-cares-about.exe`. Just rename it to `make.exe`
 
-# CLI Terminal
+## GUI Terminal
+
+Features in V4:
+
+- Port list auto update
+- Support for input/output in HEX format
+- Escaped special characters support
+- User settings are now being saved
+- Different line endings (CRLF/CR/LF/None)
+- Timestamps
+- Command echoing now can be disabled
+
+<br>\
+<img src="design/screenshot-gui-v4.png">\
+<br>
+
+## CLI Terminal
 
 Looks like this:
 
@@ -23,17 +42,20 @@ Looks like this:
 
 Pretty simple tool, has a help command, so as long as you are familiar with diskpart - you won't get lost.
 
-# GUI Terminal
+<br>
 
-Now we're getting serious. It's the second generation of this tool. Stupidly simple to use:
+### Build dependencies
 
-<img src="design/screenshot-gui.png">
+- Windows 7+
+- WinAPI headers and compiler support
+- [JSON for Modern C++](https://github.com/nlohmann/json)
 
-### Note
+### Run dependencies
 
-- At the moment, special characters are not supported. Will come in v4
+- Windows 7+
+- [Universal C Runtime (URCT)](https://support.microsoft.com/en-us/topic/update-for-universal-c-runtime-in-windows-c0514201-7fe6-95a3-b0a5-287930f3560c)
 
-- You might ask what exaclty will be placed when the "Use newline" is active? It'll be just a single LF (0x0A) character
+<br>
 
 # Lib serial-api
 
