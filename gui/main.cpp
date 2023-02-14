@@ -40,7 +40,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpfnWndProc	 = WndProc;
 	wc.hInstance	 = hInstance;
 	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wc.hbrBackground = CreateSolidBrush(0xffffff);
 	wc.lpszMenuName  = APP_MAIN_MENU_ID;
 	wc.lpszClassName = "terminalMainWindow";
 	wc.hIcon		 = LoadIconA(hInstance, "APPICON");
@@ -94,7 +94,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	ui.menu_main = GetMenu(hwnd);
 	ui.menu_hexStyle = GetSubMenu(ui.menu_main, 1);	//	(1) - index of that menu by the resource file
 
-	static HBRUSH hbrBkgnd = 0;
+	//static HBRUSH hbrBkgnd = 0;
 	
 	switch(Message) {
 			
