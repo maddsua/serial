@@ -59,6 +59,13 @@ Pretty simple tool, has a help command, so as long as you are familiar with disk
 
 # Lib serial-api
 
-Allows you to do really cool stuff with com port. Will be a part of v4 Serial Terminal. That thing is gonna be thicc.
+Allows you to do really cool stuff with com port. Is a part of v4 Serial Terminal. Actually this lib is the reason to create v4
 
-Compile with a `make` command while in `lib` directory, then just link to your project. Super straightforward as always.
+## Building:
+
+1. Enter `cd lib`
+2. Run `make libshared` to get a dll
+3. Run `make libstatic` to get a static .a library
+4. Link to your project
+5. ???
+6. PROFIT!
