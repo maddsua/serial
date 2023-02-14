@@ -3,7 +3,7 @@ APP		= serial.exe
 OBJECTS = serial.o
 FLAGS   = -std=c++20
 LIBS	= -lwinmm
-LIBNAME = serialapi
+LIBNAME = api-maddsua-serial
 
 
 .PHONY: all all-before all-after clean-custom

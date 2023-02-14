@@ -1,11 +1,11 @@
 
 APP        = SerialTerminal.exe
-OBJECTS    = main.o app.res terminal.o interface.o
+OBJECTS    = main.o app.res terminal.o interface.o settings.o
 LIBOBJECTS = ../lib/serial.o
 FLAGS      = -std=c++20
 LIBS       = -lgdi32 -lcomdlg32 -lwinmm
-# -L"../lib" -lserialapi
-#-mwindows
+DLLNAME    = api-maddsua-serial
+DLLDIR     = -L"../lib"
 
 .PHONY: all all-before all-after clean-custom run-custom prod prod-custom
 all: all-before $(APP) all-after
@@ -22,7 +22,7 @@ run: run-custom
 	$(APP)
 
 prod: prod-custom
-	g++ $(OBJECTS) -L"../lib" -lserialapi $(LIBS) $(FLAGS) -mwindows -o $(APP)
+	g++ $(OBJECTS) $(DLLDIR) -l$(DLLNAME) $(LIBS) $(FLAGS) -mwindows -o $(APP)
 
 
 $(APP): $(OBJECTS) $(LIBOBJECTS)
@@ -36,6 +36,9 @@ terminal.o: terminal.cpp
 
 interface.o: interface.cpp
 	g++ -c interface.cpp -o interface.o $(FLAGS)
+
+settings.o: settings.cpp
+	g++ -c settings.cpp -o settings.o $(FLAGS)	
 
 ../lib/serial.o: ../lib/serial.cpp
 	g++ -c ../lib/serial.cpp -o ../lib/serial.o $(FLAGS)
