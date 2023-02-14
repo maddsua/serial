@@ -35,8 +35,8 @@ libstatic: $(OBJECTS)
 	ar rvs lib$(LIBNAME).a $(OBJECTS)
 
 #	make dll
-libshared: $(OBJECTS)
-	g++ $(OBJECTS) $(LIBS) $(FLAGS) -s -shared -o $(LIBNAME).dll -Wl,--out-implib,lib$(LIBNAME).dll.a
+libshared: $(OBJECTS) lib.res
+	g++ $(OBJECTS) lib.res $(LIBS) $(FLAGS) -s -shared -o $(LIBNAME).dll -Wl,--out-implib,lib$(LIBNAME).dll.a
 
 
 # ----
@@ -45,3 +45,6 @@ libshared: $(OBJECTS)
 
 serial.o: serial.cpp serial.hpp
 	g++ -c serial.cpp $(FLAGS)
+
+lib.res: lib.rc
+	windres -i lib.rc --input-format=rc -o lib.res -O coff 
