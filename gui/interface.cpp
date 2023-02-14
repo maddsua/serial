@@ -1,4 +1,4 @@
-#include "interface.hpp"
+#include "app.hpp"
 #include "terminal.hpp"
 #include "rescodes.hpp"
 
@@ -70,7 +70,7 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	}
 
 	//	setup main menu items
-	selectSubmenu_hexStyle(ui, SUBMENU_HEXSTYLE_SHORT);
+	selectSubmenu_hexStyle(ui, data->hexStyleFull ? SUBMENU_HEXSTYLE_FULL : SUBMENU_HEXSTYLE_SHORT);
 
 	checkMainMenuItem(ui, MENUITEM_SPECCHARS, data->specialCharsSupport);
 	checkMainMenuItem(ui, MENUITEM_TIMESTAMP, data->showTimestamps);

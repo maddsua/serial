@@ -13,18 +13,21 @@
 
 	#include "rescodes.hpp"
 
-	#define APP_NAME		"Serial Terminal"
-	#define APP_VERSION		"4.0.0"
-	#define APP_TITLE		APP_NAME " v" APP_VERSION
-	#define APP_DESC		"A serial port communication utility"
-	#define VER_AUTHSTAMP	"2023 maddsua"
-	#define APP_COPYRIGHT	"https://github.com/maddsua"
+	#define APP_NAME			"Serial Terminal"
+	#define APP_VERSION			"4.0.0"
+	#define APP_TITLE			APP_NAME " v" APP_VERSION
+	#define APP_DESC			"A serial port communication utility"
+	#define VER_AUTHSTAMP		"2023 maddsua"
+	#define APP_COPYRIGHT		"https://github.com/maddsua"
 
 
-	#define windowSizeX				640
-	#define windowSizeY				460
+	#define CONFIG_SAVE_TREE	"\\AppData\\Local\\maddsuadev\\serialterminal\\config.json"
 
-	#define IO_DEFAULT_SPEED		(9600)
+
+	#define windowSizeX			640
+	#define windowSizeY			460
+
+	#define IO_DEFAULT_SPEED	(9600)
 
 
 	struct uiElements {

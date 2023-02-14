@@ -15,13 +15,14 @@
 #include <string>
 #include <algorithm>
 #include <regex>
+#include <fstream>
 
 #include <nlohmann/json.hpp>
 using JSON = nlohmann::json;
 
 #include "../lib/serial.hpp"
 
-#include "interface.hpp"
+#include "app.hpp"
 #include "terminal.hpp"
 
 const std::vector <uint32_t> serialSpeeds = {
@@ -36,6 +37,8 @@ LRESULT CALLBACK keyboardEvents(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 WNDPROC mainevents;
 
 std::string preparePath(std::string tree);
+bool saveConfiguration(appData* data);
+bool loadConfiguration(appData* data);
 
 
 //	-------		main
@@ -88,19 +91,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	static uiElements ui;
 	static appData data;
 
-	//	set default line endings
-	data.endlines = {
-		{"CR+LF", "\r\n"},
-		{"No endline", {/* empty line */}},
-		{"CR only", "\r"},
-		{"LF only", "\n"}
-	};
-
 	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
-
-	//	get menus
-	ui.menu_main = GetMenu(hwnd);
-	ui.menu_hexStyle = GetSubMenu(ui.menu_main, 1);	//	(1) - index of that menu by the resource file
 
 	//static HBRUSH hbrBkgnd = 0;
 	
@@ -111,6 +102,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			//	get available serial speeds from the serial api
 			//	ports are not gonna be ready just yet so we will get them by the times later
 			data.speeds = serial->getSpeeds();
+
+			//	set default line endings
+			data.endlines = {
+				{"CR+LF", "\r\n"},
+				{"No endline", {/* empty line */}},
+				{"CR only", "\r"},
+				{"LF only", "\n"}
+			};
+
+			//	load user config
+			loadConfiguration(&data);
+
+			//	get menus
+			ui.menu_main = GetMenu(hwnd);
+			ui.menu_hexStyle = GetSubMenu(ui.menu_main, 1);	//	(1) - index of that menu by the resource file
 
 			uiInit(&hwnd, &ui, &data);
 			
@@ -303,6 +309,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		case WM_DESTROY: {
 
 			delete serial;
+			saveConfiguration(&data);
 			PostQuitMessage(0);
 			//DestroyWindow(ui.GUI_BUTTON_SEND);
 
@@ -394,4 +401,66 @@ std::string preparePath(std::string tree) {
 	}
 
 	return userdir + tree;
+}
+
+bool saveConfiguration(appData* data) {
+
+	auto filepath = preparePath(CONFIG_SAVE_TREE);
+	if (!filepath.size()) return false;
+
+	std::ofstream configFile(filepath.c_str(), std::ios::out);
+	if (!configFile.is_open()) return false;
+
+	JSON appconfig = {
+		{"showTimestamps", data->showTimestamps},
+		{"echoInputs", data->echoInputs},
+		{"hexMode", data->hexMode},
+		{"hexStyleFull", data->hexStyleFull},
+		{"specialCharsSupport", data->specialCharsSupport},
+		{"sel_speed", data->sel_speed},
+		{"sel_port", data->sel_port},
+		{"sel_endline", data->sel_endline}
+	};
+
+	configFile << appconfig.dump();
+
+	configFile.close();
+
+	return true;
+}
+
+bool loadConfiguration(appData* data) {
+
+	auto filepath = preparePath(CONFIG_SAVE_TREE);
+	if (!filepath.size()) return false;
+
+	std::ifstream configFile(filepath.c_str(), std::ios::in);
+	if (!configFile.is_open()) return false;
+
+	try {
+		
+		auto appconfig = JSON::parse(configFile);
+
+		data->showTimestamps = appconfig["showTimestamps"].get<bool>();
+		data->echoInputs = appconfig["echoInputs"].get<bool>();
+		data->hexMode = appconfig["hexMode"].get<bool>();
+		data->hexStyleFull = appconfig["hexStyleFull"].get<bool>();
+		data->specialCharsSupport = appconfig["specialCharsSupport"].get<bool>();
+
+		size_t temp;
+		temp = appconfig["sel_speed"].get<size_t>();
+			if (temp < data->speeds.size()) data->sel_speed = temp;
+		temp = appconfig["sel_port"].get<size_t>();
+			if (temp < data->ports.size()) data->sel_port = temp;
+		temp = appconfig["sel_endline"].get<size_t>();
+			if (temp < data->endlines.size()) data->sel_endline = temp;
+		
+	} catch(...) {
+		configFile.close();
+		puts("config load failed");
+		return false;
+	}
+	puts("config load ok");
+	configFile.close();
+	return true;
 }

@@ -9,7 +9,7 @@
 	#include <string>
 	#include <algorithm>
 
-	#include "interface.hpp"
+	#include "app.hpp"
 	#include "../lib/serial.hpp"
 
 	#define TERMINAL_MAX_TEXTLEN	(28000)
