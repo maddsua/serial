@@ -169,10 +169,6 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	char userinput[1024];
 	if (!GetWindowTextA(ui->command, userinput, sizeof(userinput))) return;
 
-	std::string message = userinput;
-
-	if (data->specialCharsSupport) restoreEscapedChars(&message);
-
 	//	check if there are ports
 	if (data->sel_port >= data->ports.size()) {
 		SetWindowTextA(ui->statusbar, "No active port selected!");
@@ -180,22 +176,22 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 	}
 
 	//	echo to terminal
-	if (data->echoInputs) printComm(ui, data, message.c_str(), false);
+	if (data->echoInputs) printComm(ui, data, userinput, false);
 
 	//	command history stuff
 	for (auto itr = data->history.begin(); itr != data->history.end(); itr++) {
-		if ((*itr) == message) {
+		if ((*itr) == userinput) {
 			data->history.erase(itr);
 			break;
 		}
 	}
-	data->history.push_back(message);
+	data->history.push_back(userinput);
 	
 
 	//	write data to com port
 	auto port = data->ports.at(data->sel_port);
 	auto endline = data->endlines.at(data->sel_endline).bytes;
-	if (!serial->write(port, std::string(message) + endline)) {
+	if (!serial->write(port, (data->specialCharsSupport ? restoreEscapedChars(userinput) : std::string(userinput)) + endline)) {
 		SetWindowTextA(ui->statusbar, "Failed to send the message!");
 		return;
 	}
@@ -216,26 +212,28 @@ const std::vector <unescape> escapedCharsTable = {
 	{'b', '\b'}
 };
 
-void restoreEscapedChars(std::string* text) {
+std::string restoreEscapedChars(std::string text) {
 
-	for (size_t i = 0; i < text->size(); i++) {
+	for (size_t i = 0; i < text.size(); i++) {
 
 		char escapechar = 0;
 
 		for (auto item : escapedCharsTable) {
-			if (text->at(i) == item.front) {
+			if (text[i] == item.front) {
 				escapechar = item.escape;
 				break;
 			}
 		}
 
-		if (i >= 2 && (escapechar && text->at(i - 1) == '\\')) {
-			if (i >= 3 && text->at(i - 2) == '\\') {
-				text->erase(i - 2, 1);
+		if (i >= 2 && (escapechar && text.at(i - 1) == '\\')) {
+			if (i >= 3 && text.at(i - 2) == '\\') {
+				text.erase(i - 2, 1);
 				continue;
 			}
-			text->replace(text->begin() + (i - 1), text->begin() + (i + 1), std::string(1, escapechar));
+			text.replace(text.begin() + (i - 1), text.begin() + (i + 1), std::string(1, escapechar));
 			i -= 2;
 		}
 	}
+
+	return text;
 }

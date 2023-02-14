@@ -33,7 +33,7 @@
 
 	std::string bytesToHex(std::string bytes, bool fullStyle);
 
-	void restoreEscapedChars(std::string* text);
+	std::string restoreEscapedChars(std::string text);
 
 
 #endif
