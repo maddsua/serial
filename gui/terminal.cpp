@@ -1,12 +1,13 @@
 #include "terminal.hpp"
 
+#include <regex>
 #include <fstream>
 
 #include <stdio.h>
 
 const uint8_t hex_table[16] = {
 	'0','1','2','3','4','5','6','7',
-	'8','9','a','b','c','d','e','f'
+	'8','9','A','B','C','D','E','F'
 };
 
 std::string bytesToHex(std::string bytes, bool fullStyle) {
@@ -21,6 +22,53 @@ std::string bytesToHex(std::string bytes, bool fullStyle) {
 
 		result.insert(result.end(), temp + (fullStyle ? 0 : 2), temp + 4);
 		if (i < bytes.size() - 1) result += ' ';
+	}
+
+	return result;
+}
+
+std::string hexToBin(std::string data) {
+
+	std::string result;
+		result.resize(data.size() / 2);
+
+	for (size_t i = 0; i < data.size(); i++) {
+		if (data[i] >= 'A' && data[i] <= 'Z') data[i] += 0x20;
+	}
+
+	auto toint = [](uint8_t* dbyte) {
+		if (*dbyte >= '0' && *dbyte <= '9') *dbyte -= 0x30;
+		else if (*dbyte >= 'a' && *dbyte <= 'z') *dbyte -= 0x57;
+	};
+
+	for (size_t m = 0, n = 0; m < result.size(); m++, n += 2) {
+
+		uint8_t byte_high = data[n];
+		uint8_t byte_low = data[n + 1];
+
+		toint(&byte_high);
+		toint(&byte_low);
+
+		result[m] = ((byte_high & 0x0f) << 4) | (byte_low & 0x0f);
+	}
+	
+	return result;
+}
+
+std::string pickHexOnly(std::string text) {
+
+	for (size_t i = 0; i < text.size(); i++) {
+		if (text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
+	}
+
+	text = std::regex_replace(text, std::regex("0X"), "");
+
+	std::smatch match;
+	std::string result;
+
+	while (std::regex_search(text, match, std::regex("[0-9A-F]{2}"))) {
+		result += match.str(0);
+		text = match.suffix().str();
 	}
 
 	return result;
@@ -112,7 +160,7 @@ void updateComPorts(maddsua::serial* serial, uiElements* ui, appData* data) {
 void printComm(uiElements* ui, appData* data, std::string message, bool incoming) {
 
 	//	message preformatting
-	if (incoming && data->hexMode) message = bytesToHex(message, data->hexStyleFull);
+	if (data->hexMode) message = bytesToHex(message, data->hexStyleFull);
 	
 	if (!incoming || data->hexMode) message += "\r\n";
 
@@ -175,9 +223,6 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 		return;
 	}
 
-	//	echo to terminal
-	if (data->echoInputs) printComm(ui, data, userinput, false);
-
 	//	command history stuff
 	for (auto itr = data->history.begin(); itr != data->history.end(); itr++) {
 		if ((*itr) == userinput) {
@@ -186,12 +231,18 @@ void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data) {
 		}
 	}
 	data->history.push_back(userinput);
-	
+
+	//	restore hex
+	std::string message = userinput;
+	if (data->hexMode) message = hexToBin(pickHexOnly(userinput));
+
+	//	echo to terminal
+	if (data->echoInputs) printComm(ui, data, message, false);
 
 	//	write data to com port
 	auto port = data->ports.at(data->sel_port);
 	auto endline = data->endlines.at(data->sel_endline).bytes;
-	if (!serial->write(port, (data->specialCharsSupport ? restoreEscapedChars(userinput) : std::string(userinput)) + endline)) {
+	if (!serial->write(port, ((data->specialCharsSupport && !data->hexMode) ? restoreEscapedChars(message) : message) + endline)) {
 		SetWindowTextA(ui->statusbar, "Failed to send the message!");
 		return;
 	}

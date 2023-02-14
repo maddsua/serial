@@ -22,7 +22,7 @@
 
 
 	#define windowSizeX				640
-	#define windowSizeY				480
+	#define windowSizeY				460
 
 	#define IO_DEFAULT_SPEED		(9600)
 

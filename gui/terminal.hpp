@@ -32,8 +32,9 @@
 	void sendMessage(maddsua::serial* serial, uiElements* ui, appData* data);
 
 	std::string bytesToHex(std::string bytes, bool fullStyle);
+	std::string hexToBin(std::string data);
+	std::string pickHexOnly(std::string text);
 
 	std::string restoreEscapedChars(std::string text);
-
 
 #endif

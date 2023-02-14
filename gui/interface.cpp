@@ -61,7 +61,7 @@ void uiInit(HWND* appwnd, uiElements* ui, appData* data) {
 	SendMessageA(ui->check_hexMode, BM_SETCHECK, data->hexMode, 0);
 
 	//	"status bar"
-	ui->statusbar = CreateWindowA(WC_STATICA, "Starting up...", WS_VISIBLE | WS_CHILD | SS_LEFT, 5, 410, 130, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
+	ui->statusbar = CreateWindowA(WC_STATICA, "Starting up...", WS_VISIBLE | WS_CHILD | SS_LEFT, 5, 390, 130, 16, *appwnd, (HMENU)GUI_STATUSBAR, NULL, NULL);
 
 	//	set font
 	for (size_t i = 0; i <= 1000; i++) {
