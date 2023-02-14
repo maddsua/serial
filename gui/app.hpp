@@ -93,5 +93,10 @@
 	void historyRecall(uiElements* ui, appData* data, int step);
 	void resetCommandPrompt(uiElements* ui, appData* data);
 
+	//	app settings
+	std::string preparePath(std::string tree);
+	bool saveConfiguration(appData* data);
+	bool loadConfiguration(appData* data);
+
 
 #endif
