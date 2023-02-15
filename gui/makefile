@@ -4,7 +4,7 @@ OBJECTS    = main.o app.res terminal.o interface.o settings.o
 LIBOBJECTS = ../lib/serial.o
 FLAGS      = -std=c++20
 LIBS       = -lgdi32 -lcomdlg32 -lwinmm
-DLLNAME    = api-maddsua-serial
+DLLNAME    = maddsua-serial
 DLLDIR     = -L"../lib"
 
 .PHONY: all all-before all-after clean-custom run-custom prod prod-custom
