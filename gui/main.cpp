@@ -81,9 +81,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	static uiElements ui;
 	static appData data;
 
-	static auto serial = new maddsua::serial(8, false);	//	!!!	change it to scanSerialPorts
-
-	//static HBRUSH hbrBkgnd = 0;
+	//	scan up to port 128
+	static auto serial = new maddsua::serial(128, false);
 	
 	switch(Message) {
 			
@@ -307,20 +306,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			} else puts("Config save FAILED");
 
 			PostQuitMessage(0);
-			//DestroyWindow(ui.GUI_BUTTON_SEND);
 
 		} break;
-
-		/*case WM_CTLCOLORSTATIC: {
-			HDC hdcStatic = (HDC) wParam;
-			SetTextColor(hdcStatic, RGB(255,255,255));
-			SetBkColor(hdcStatic, RGB(0,0,0));
-
-			if (hbrBkgnd == NULL) hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
-
-			return (INT_PTR)hbrBkgnd;
-		}*/
-		
 		
 		default: return DefWindowProc(hwnd, Message, wParam, lParam);
 	}
