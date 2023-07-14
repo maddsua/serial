@@ -14,7 +14,7 @@ clean: clean-custom
 # ----
 
 
-OBJECTS_LIB = lib/serialport.o lib/serialdevice.o lib/libserial.res
+OBJECTS_LIB = lib/serialport.o lib/serialdevice.o lib/dllinfo.res
 TARGET_LIB = libserial.dll
 
 libshared: $(TARGET_LIB)
@@ -27,5 +27,5 @@ lib/serialport.o: lib/serialport.cpp
 lib/serialdevice.o: lib/serialdevice.cpp
 	g++ -c lib/serialdevice.cpp -o lib/serialdevice.o $(FLAGS)
 
-lib/libserial.res: lib/lib.rc
-	windres -i lib/lib.rc --input-format=rc -o lib/libserial.res -O coff
+lib/dllinfo.res: lib/dllinfo.rc
+	windres -i lib/dllinfo.rc --input-format=rc -o lib/dllinfo.res -O coff
