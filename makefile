@@ -13,7 +13,6 @@ clean: clean-custom
 #	Libserial
 # ----
 
-
 OBJECTS_LIB = lib/serialport.o lib/serialdevice.o lib/dllinfo.res
 TARGET_LIB = libserial.dll
 
