@@ -8,7 +8,7 @@ int main(int argc, char const *argv[])
 
 	auto port = Serial::Port(5);
 
-	std::cout << "Port status: " << port.status() << std::endl;
+	std::cout << "Port status: " << port.status().status << std::endl;
 
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
