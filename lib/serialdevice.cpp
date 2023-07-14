@@ -8,7 +8,7 @@ std::vector<Serial::SerialDevice> Serial::devices() {
 	char portPath[32];
 	char devPath[UINT8_MAX];
 
-	for (uint16_t i = 0; i < UINT8_MAX; i++) {
+	for (uint16_t i = 1; i < UINT8_MAX; i++) {
 		snprintf(portPath, sizeof(portPath), "COM%i", i);
 		auto portResult = QueryDosDeviceA(portPath, devPath, sizeof(devPath));
 		if (!portResult) continue;
