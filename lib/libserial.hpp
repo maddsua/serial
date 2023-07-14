@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
-//#include <thread>
+#include <mutex>
+#include <thread>
 
 namespace Serial {
 
@@ -13,19 +14,27 @@ namespace Serial {
 		PORTSTAT_NOT_CONNECTED = -1,
 		PORTSTAT_PORT_ERROR = -2,
 		PORTSTAT_SETT_ERR = -3,
+		PORTSTAT_READ_ERR = -4,
+		PORTSTAT_WRITE_ERR = -5,
 	};
 
 	class Port {
 		private:
+
+			std::mutex threadLock;
+			std::thread asyncReader;
+
 			void* hPort = nullptr;
 			uint32_t portSpeed = 9600;
 			uint16_t portidx = 0;
+
 			PortStatus portStatus = PORTSTAT_NOT_CONNECTED;
 			int64_t apiError = 0;
+
+			std::vector<uint8_t> bufferRx;
+			
 			size_t transferTX = 0;
 			size_t transferRX = 0;
-			size_t dataAvailable = 0;
-			std::vector<uint8_t> bufferRx;
 
 		public:
 			Port(uint16_t port);
