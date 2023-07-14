@@ -1,8 +1,8 @@
 #include <windows.h>
 
 1 VERSIONINFO
-FILEVERSION 0,2,7
-PRODUCTVERSION 0,2,7
+FILEVERSION 1,0,1
+PRODUCTVERSION 1,0,1
 FILETYPE VFT_DLL
 {
 	BLOCK "StringFileInfo"
@@ -10,14 +10,14 @@ FILETYPE VFT_DLL
 		BLOCK "040904E4"
 		{
 			VALUE "CompanyName", "maddsua/dev"
-			VALUE "FileVersion", "0.2.7"
+			VALUE "FileVersion", "1.0.1"
 			VALUE "FileDescription", "A serial port communications library"
 			VALUE "InternalName", "libserialapi"
-			VALUE "LegalCopyright", "https://github.com/maddsua"
+			VALUE "LegalCopyright", "https://github.com/maddsua/serial"
 			VALUE "LegalTrademarks", "2023 maddsua/dev"
 			VALUE "OriginalFilename", "libserialapi"
 			VALUE "ProductName", "libserialapi"
-			VALUE "ProductVersion", "0.2.7"
+			VALUE "ProductVersion", "1.0.1"
 		}
 	}
 	BLOCK "VarFileInfo"
