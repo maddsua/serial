@@ -18,11 +18,16 @@ namespace Serial {
 		PORTSTAT_WRITE_ERR = -5,
 	};
 
+	struct PortStats {
+		size_t transferTX = 0;
+		size_t transferRX = 0;
+	};
+
 	class Port {
 		private:
-
 			std::mutex threadLock;
-			std::thread asyncReader;
+			std::thread* asyncReader = nullptr;
+			void reader();
 
 			void* hPort = nullptr;
 			uint32_t portSpeed = 9600;
@@ -32,13 +37,16 @@ namespace Serial {
 			int64_t apiError = 0;
 
 			std::vector<uint8_t> bufferRx;
-			
-			size_t transferTX = 0;
-			size_t transferRX = 0;
+
+			PortStats portStats;
 
 		public:
 			Port(uint16_t port);
 			~Port();
+
+			PortStatus status();
+			PortStats stats();
+			bool connected();
 
 			uint16_t getPortIdx();
 
