@@ -10,7 +10,7 @@
 	#include <algorithm>
 
 	#include "app.hpp"
-	#include "../lib/serial.hpp"
+	#include "./serial.hpp"
 
 	#define TERMINAL_MAX_TEXTLEN	(28000)
 	#define TERMINAL_CUT_OVERFLOW	(1000)

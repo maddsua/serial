@@ -14,10 +14,8 @@
 #include <algorithm>
 
 
-#include "../lib/serial.hpp"
-
 #include "app.hpp"
-#include "terminal.hpp"
+#include "./terminal.hpp"
 
 const std::vector <uint32_t> serialSpeeds = {
 	110, 300, 600, 1200, 2400, 4800, 9600,

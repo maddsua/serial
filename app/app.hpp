@@ -11,7 +11,7 @@
 	#include <string>
 	#include <windows.h>
 
-	#include "rescodes.hpp"
+	#include "./rescodes.hpp"
 
 	#define APP_NAME			"Serial Terminal"
 	#define APP_VERSION			"4.0.0"
