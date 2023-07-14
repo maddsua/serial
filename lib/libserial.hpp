@@ -16,7 +16,7 @@ namespace Serial {
 
 	std::vector<SerialDevice> devices();
 
-	enum PortStatus {
+	enum PortStatusOptions {
 		PORTSTAT_OK = 0,
 		PORTSTAT_NOT_CONNECTED = -1,
 		PORTSTAT_PORT_ERROR = -2,
@@ -30,6 +30,11 @@ namespace Serial {
 		size_t transferRX = 0;
 	};
 
+	struct PortStatus {
+		PortStatusOptions status;
+		int64_t apiError;
+	};
+
 	class Port {
 		private:
 			std::mutex threadLock;
@@ -40,8 +45,7 @@ namespace Serial {
 			uint32_t portSpeed = 9600;
 			uint16_t portidx = 0;
 
-			PortStatus portStatus = PORTSTAT_NOT_CONNECTED;
-			int64_t apiError = 0;
+			PortStatus portStatus;
 
 			std::vector<uint8_t> bufferRx;
 
