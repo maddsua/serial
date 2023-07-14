@@ -54,17 +54,32 @@ Port::Port(uint16_t port) {
 		return;
 	}
 
+	this->asyncReader = new std::thread(reader, this);
 	this->portStatus = PORTSTAT_OK;
 }
 
 Port::~Port() {
-	if (this->hPort == INVALID_HANDLE_VALUE) return;
-	EscapeCommFunction(this->hPort, CLRDTR);
-	PurgeComm(this->hPort, PURGE_RXCLEAR | PURGE_TXCLEAR);
-	CloseHandle(this->hPort);
+
+	if (this->hPort != INVALID_HANDLE_VALUE) {
+		EscapeCommFunction(this->hPort, CLRDTR);
+		PurgeComm(this->hPort, PURGE_RXCLEAR | PURGE_TXCLEAR);
+		CloseHandle(this->hPort);
+	}
+
+	if (this->asyncReader != nullptr) {
+		if (this->asyncReader->joinable()) {
+			this->asyncReader->join();
+		}
+	}
+}
+
+PortStatus Port::status() {
+	return this->portStatus;
 }
 
 bool Port::setSpeed(uint32_t bSpeed) {
+
+	if (!serialSpeeds.contains(bSpeed)) return false;
 
 	DCB settings;
 	if (!GetCommState(this->hPort, &settings)) {
@@ -94,6 +109,14 @@ bool Port::available() {
 	return this->bufferRx.size();
 }
 
+PortStats Port::stats() {
+	return this->portStats;
+}
+
+bool Port::connected() {
+	return this->portStatus == PORTSTAT_OK;
+}
+
 std::vector<uint8_t> Port::read() {
 	std::lock_guard<std::mutex>lock(threadLock);
 	auto temp = this->bufferRx;
@@ -102,8 +125,8 @@ std::vector<uint8_t> Port::read() {
 }
 
 bool Port::write(std::vector<uint8_t>& data) {
-	
-	if (this->hPort == INVALID_HANDLE_VALUE || this->portStatus != PORTSTAT_OK) return false;
+
+	if (this->portStatus != PORTSTAT_OK) return false;
 
 	uint32_t bytesWritten = 0;
 
@@ -113,6 +136,31 @@ bool Port::write(std::vector<uint8_t>& data) {
 		return false;
 	}
 	
-	this->transferTX += bytesWritten;
+	this->portStats.transferTX += bytesWritten;
 	return true;
+}
+
+void Port::reader() {
+
+	uint32_t bytesRead = 0;
+	char rxTemp[128];
+
+	while (this->hPort != INVALID_HANDLE_VALUE) {
+
+		if (!ReadFile(this->hPort, &rxTemp, 128, (DWORD*)&bytesRead, NULL)) {
+			this->apiError = GetLastError();
+			this->portStatus = PORTSTAT_WRITE_ERR;
+			return;
+		}
+
+		if (!bytesRead) { 
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			continue;
+		}
+
+		this->portStats.transferRX += bytesRead;
+
+		std::lock_guard<std::mutex>lock(threadLock);
+		this->bufferRx.insert(this->bufferRx.end(), rxTemp, rxTemp + bytesRead);
+	}
 }
