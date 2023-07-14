@@ -93,3 +93,26 @@ uint16_t Port::getPortIdx() {
 bool Port::available() {
 	return this->bufferRx.size();
 }
+
+std::vector<uint8_t> Port::read() {
+	std::lock_guard<std::mutex>lock(threadLock);
+	auto temp = this->bufferRx;
+	this->bufferRx.clear();
+	return temp;
+}
+
+bool Port::write(std::vector<uint8_t>& data) {
+	
+	if (this->hPort == INVALID_HANDLE_VALUE || this->portStatus != PORTSTAT_OK) return false;
+
+	uint32_t bytesWritten = 0;
+
+	if (!WriteFile(this->hPort, data.data(), data.size(), (DWORD*)&bytesWritten, NULL)) {
+		this->apiError = GetLastError();
+		this->portStatus = PORTSTAT_READ_ERR;
+		return false;
+	}
+	
+	this->transferTX += bytesWritten;
+	return true;
+}
