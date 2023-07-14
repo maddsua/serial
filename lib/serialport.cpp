@@ -25,6 +25,7 @@ std::vector<uint32_t> Serial::speeds() {
 Port::Port(uint16_t port) {
 
 	this->portidx = port;
+	this->portStatus.apiError = 0;
 
 	char filePath[16];
 	snprintf(filePath, sizeof(filePath), "\\\\.\\COM%i", this->portidx);
@@ -32,22 +33,22 @@ Port::Port(uint16_t port) {
 
 	if (this->hPort == INVALID_HANDLE_VALUE) {
 		auto errcode = GetLastError();
-		this->apiError = errcode;
-		this->portStatus = (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) ? PORTSTAT_NOT_CONNECTED : PORTSTAT_PORT_ERROR;
+		this->portStatus.apiError = errcode;
+		this->portStatus.status = (errcode == ERROR_FILE_NOT_FOUND || errcode == WINERR_DEV_NOTFOUND) ? PORTSTAT_NOT_CONNECTED : PORTSTAT_PORT_ERROR;
 		return;
 	}
 
 	COMMTIMEOUTS timeouts = {1, 1, 1, 1, 1};
 	if (!SetCommTimeouts(this->hPort, &timeouts)) {
-		this->apiError = GetLastError();
-		this->portStatus = PORTSTAT_SETT_ERR;
+		this->portStatus.apiError = GetLastError();
+		this->portStatus.status = PORTSTAT_SETT_ERR;
 		return;
 	}
 
 	DCB settings;
 	if (!GetCommState(this->hPort, &settings)) {
-		this->apiError = GetLastError();
-		this->portStatus = PORTSTAT_SETT_ERR;
+		this->portStatus.apiError = GetLastError();
+		this->portStatus.status = PORTSTAT_SETT_ERR;
 		return;
 	}
 
@@ -57,13 +58,13 @@ Port::Port(uint16_t port) {
 	settings.Parity = NOPARITY;
 
 	if (!SetCommState(this->hPort, &settings)) {
-		this->apiError = GetLastError();
-		this->portStatus = PORTSTAT_SETT_ERR;
+		this->portStatus.apiError = GetLastError();
+		this->portStatus.status = PORTSTAT_SETT_ERR;
 		return;
 	}
 
 	this->asyncReader = new std::thread(reader, this);
-	this->portStatus = PORTSTAT_OK;
+	this->portStatus.status = PORTSTAT_OK;
 }
 
 Port::~Port() {
@@ -91,16 +92,16 @@ bool Port::setSpeed(uint32_t bSpeed) {
 
 	DCB settings;
 	if (!GetCommState(this->hPort, &settings)) {
-		this->apiError = GetLastError();
-		this->portStatus = PORTSTAT_SETT_ERR;
+		this->portStatus.apiError = GetLastError();
+		this->portStatus.status = PORTSTAT_SETT_ERR;
 		return false;
 	}
 
 	settings.BaudRate = bSpeed;
 
 	if (!SetCommState(this->hPort, &settings)) {
-		this->apiError = GetLastError();
-		this->portStatus = PORTSTAT_SETT_ERR;
+		this->portStatus.apiError = GetLastError();
+		this->portStatus.status = PORTSTAT_SETT_ERR;
 		return false;
 	}
 
@@ -122,7 +123,7 @@ PortStats Port::stats() {
 }
 
 bool Port::connected() {
-	return this->portStatus == PORTSTAT_OK;
+	return this->portStatus.status == PORTSTAT_OK;
 }
 
 std::vector<uint8_t> Port::read() {
@@ -134,13 +135,13 @@ std::vector<uint8_t> Port::read() {
 
 bool Port::write(std::vector<uint8_t>& data) {
 
-	if (this->portStatus != PORTSTAT_OK) return false;
+	if (this->portStatus.status != PORTSTAT_OK) return false;
 
 	uint32_t bytesWritten = 0;
 
 	if (!WriteFile(this->hPort, data.data(), data.size(), (DWORD*)&bytesWritten, NULL)) {
-		this->apiError = GetLastError();
-		this->portStatus = PORTSTAT_READ_ERR;
+		this->portStatus.apiError = GetLastError();
+		this->portStatus.status = PORTSTAT_READ_ERR;
 		return false;
 	}
 	
@@ -156,8 +157,8 @@ void Port::reader() {
 	while (this->hPort != INVALID_HANDLE_VALUE) {
 
 		if (!ReadFile(this->hPort, &rxTemp, 128, (DWORD*)&bytesRead, NULL)) {
-			this->apiError = GetLastError();
-			this->portStatus = PORTSTAT_WRITE_ERR;
+			this->portStatus.apiError = GetLastError();
+			this->portStatus.status = PORTSTAT_WRITE_ERR;
 			return;
 		}
 
