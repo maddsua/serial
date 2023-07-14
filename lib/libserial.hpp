@@ -64,6 +64,8 @@ namespace Serial {
 			bool write(std::vector<uint8_t>& data);
 	};
 
+	std::vector<uint32_t> getSerialSpeeds();
+
 };
 
 #endif
