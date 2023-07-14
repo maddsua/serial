@@ -14,6 +14,14 @@ std::set<uint32_t> serialSpeeds = {
 	56000, 57600, 115200, 128000
 };
 
+std::vector<uint32_t> Serial::getSerialSpeeds() {
+	std::vector<uint32_t> temp;
+	for (const auto& item : serialSpeeds) {
+		temp.push_back(item);
+	}
+	return std::move(temp);
+}
+
 Port::Port(uint16_t port) {
 
 	this->portidx = port;
