@@ -9,6 +9,13 @@
 
 namespace Serial {
 
+	struct SerialDevice {
+		uint16_t port;
+		std::string devpath;
+	};
+
+	std::vector<SerialDevice> devices();
+
 	enum PortStatus {
 		PORTSTAT_OK = 0,
 		PORTSTAT_NOT_CONNECTED = -1,
